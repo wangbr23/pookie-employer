@@ -1,0 +1,19 @@
+# Journal
+
+Append-only. One entry per work session. Newest at the bottom. Don't edit past entries — if something's wrong now, say so in a new entry.
+
+## 2026-08-31 — project created
+
+Initialized project scaffold (AGENTS.md, CLAUDE.md, CLEANCODE.md, docs/specs, docs/designs, decisions log, TODO, .pi/skills). Nothing built yet.
+
+## 2026-08-31 — product grilling completed
+
+Grilled and saved the Pookie Employer product spec at `docs/specs/pookie-employer.md`. Key outcomes: automated external job discovery is required from day one, MVP is a read-only recommender/dashboard, and sensitive profile/job-search data must be handled carefully. Next step is technical design review.
+
+## 2026-08-31 — design review completed
+
+Drafted and reviewed the implementation design at `docs/designs/2026-08-31-pookie-employer.md` using two DeepSeek R1 read-only reviewer runs. Accepted revisions around AI consent, privacy, uncertainty fields, cost/crawl monitoring, cron-to-queue migration triggers, and usefulness metrics. Updated `AGENTS.md` with the chosen TypeScript/Next.js/PostgreSQL stack.
+
+## 2026-08-31 — design revised for FastAPI backend
+
+After user feedback, revised the design away from a single Next.js server-side architecture. The design now uses a Next.js/TypeScript dashboard frontend plus a dedicated Python FastAPI backend for ingestion, ranking, AI integration, cron/CLI jobs, and APIs. Updated `AGENTS.md` and `docs/decisions.md` accordingly.

@@ -1,0 +1,1 @@
+See [AGENTS.md](AGENTS.md) — that's the source of truth for conventions, commands, and architecture. Kept as one file so Claude Code and Codex (and any other tool) read the same context instead of two copies drifting apart.

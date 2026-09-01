@@ -1,0 +1,537 @@
+# Pookie Employer Implementation Design
+
+**Date:** 2026-08-31
+**Spec:** `docs/specs/pookie-employer.md`
+**Mock:** `docs/specs/mocks/mock.png`
+
+## Problem
+
+Pookie Employer needs to turn a sensitive personal job-search profile into a daily set of trustworthy job recommendations from external sources. The core technical problem is not merely displaying jobs; it is building a small, reliable ingestion and ranking pipeline that can:
+
+- collect jobs from public/ATS/company sources without hostile scraping;
+- preserve source coverage/debug information so missed-source risk is visible;
+- normalize and deduplicate postings;
+- rank jobs against a profile with explainable fit buckets;
+- present fresh results in a warm, simple dashboard with save/dismiss/apply actions.
+
+## Requirements grounding
+
+From `docs/specs/pookie-employer.md`, the MVP must include:
+
+- automated external job discovery from day one;
+- daily background refresh plus on-demand refresh;
+- first milestone support for a hardcoded/admin-configured profile before full onboarding;
+- structured ATS platforms plus a small curated company/source list as the initial source set;
+- legal/ToS-safe ingestion: avoid auth-gated, explicitly prohibited, anti-bot-bypass, and hostile scraping;
+- coverage/debug visibility: last crawl time, sources searched, jobs found, source/platform/company coverage, failures, and pending source suggestions;
+- qualitative fit buckets: Strong Fit, Possible Fit, Stretch, Needs Review;
+- explanations of why a job fits, concerns/gaps, and what to verify;
+- dashboard actions: view/filter/search, save, dismiss with reasons, and open apply link;
+- duplicate merging while preserving all source/apply links;
+- job states: New, Seen, Saved, Dismissed, Possibly closed, Closed/archived;
+- sensitive-data handling, real auth if hosted, storage minimization, deletion/export controls;
+- target ongoing MVP cost under $25/month.
+
+Non-goals from the spec:
+
+- no auto-applying;
+- no resume/cover-letter generation;
+- no application tracking pipeline or Applied state;
+- no interview prep, outreach, negotiation tooling, browser extension, mobile app, multi-user SaaS/billing, or LinkedIn/Indeed auth scraping.
+
+## Current-state grounding
+
+This is a scaffolded project with no application code yet.
+
+- `AGENTS.md` records the project description, leaves stack/commands as TBD, and requires small reviewable tasks.
+- `CLEANCODE.md` requires simple direct solutions, small diffs, explicit domain states, input validation at boundaries, and careful handling of ambiguity/security/privacy.
+- `docs/decisions.md` already records two load-bearing decisions: automated external job discovery is core MVP scope, and profile/job-search data must be treated as sensitive.
+- `docs/specs/pookie-employer.md` is the product source of truth.
+- `docs/specs/mocks/mock.png` provides visual direction for a warm, soft dashboard style; its sample non-software jobs are illustrative only.
+- There is no current code, database schema, deployment, or package manager to preserve.
+
+## Goals / Non-goals
+
+### Goals
+
+- Choose a minimal full-stack architecture that can ship the first milestone quickly.
+- Define the data model and ingestion/ranking boundaries before implementation begins.
+- Keep source ingestion observable and recoverable rather than a silent batch script.
+- Keep AI calls behind explicit service boundaries so provider choice can change later.
+- Preserve sensitive data constraints without overbuilding enterprise security.
+- Split the design into small implementation slices suitable for `plan-tasks` and agent dispatch.
+
+### Non-goals
+
+- Implementing code in this document.
+- Designing a general-purpose crawler platform.
+- Building polished admin UI before config/scripts prove the workflow.
+- Supporting multiple unrelated users, teams, billing, or public SaaS operations.
+- Building resume generation, cover-letter generation, application tracking, or auto-apply.
+
+## Design
+
+### Stack pick
+
+Use a **Next.js TypeScript frontend plus a dedicated FastAPI Python backend/worker**, backed by PostgreSQL, for the MVP.
+
+Recommended concrete stack:
+
+- Frontend runtime/language: TypeScript on Node.js.
+- Frontend framework: Next.js App Router.
+- Styling: Tailwind CSS, matching the soft visual direction in `docs/specs/mocks/mock.png`.
+- Backend runtime/language: Python 3.12+.
+- Backend framework: FastAPI.
+- Backend jobs: FastAPI service functions plus CLI/cron entrypoints for crawl/rank jobs; add a queue only when measured crawl duration/concurrency requires it.
+- Database: PostgreSQL.
+- Database access: SQLAlchemy 2.x + Alembic migrations on the backend. The frontend should access data through backend APIs, not direct database writes.
+- Auth: simple hosted auth or provider-backed auth for the frontend, with backend API authorization and a single allowed account for MVP.
+- AI provider adapter: one internal Python `ai` service interface, initially backed by a low-cost hosted LLM API chosen at implementation time.
+- Scheduling: a daily hosted cron or scheduler calls a protected backend endpoint/CLI job; the dashboard can trigger on-demand refresh through the backend.
+
+Why this pick:
+
+- The MVP's core value is ingestion, normalization, deduplication, and AI ranking. Those are long-running backend concerns, not frontend concerns.
+- Python/FastAPI gives broader access to AI, scraping, parsing, NLP, queueing, and data-processing libraries.
+- Next.js remains a strong fit for the warm dashboard and fast UI iteration.
+- PostgreSQL handles relational job/source/run data well and avoids premature search infrastructure.
+- Keeping the frontend out of direct database writes gives a clearer privacy and authorization boundary.
+- Starting with FastAPI cron/CLI jobs is simpler than introducing a queue immediately, while preserving an obvious path to a worker queue later.
+
+Update `AGENTS.md` after this design is accepted to record the selected stack and commands.
+
+### Architecture overview
+
+The application has two deployable services and five logical layers:
+
+1. **Dashboard/UI layer — Next.js frontend**
+   - Next.js pages/components for For You, Saved, All Jobs, Dismissed/Archived, Possibly Closed, and a simple debug/admin view.
+   - Reads precomputed job recommendations from backend APIs; does not run expensive AI work during page load.
+   - Sends user actions such as save, dismiss, mark seen, export, and on-demand refresh to the backend.
+
+2. **Backend API layer — FastAPI**
+   - REST endpoints for job lists, job detail, save, dismiss, mark seen, trigger crawl, rerun ranking, export saved jobs, and delete profile/history.
+   - Validates all inputs using Pydantic schemas before database writes.
+   - Owns authorization checks for sensitive/admin/destructive actions.
+
+3. **Ingestion layer — FastAPI backend/worker code**
+   - Source adapters for Greenhouse, Lever, Ashby, and curated company/public career URLs.
+   - Produces normalized `RawJobPosting` records plus `CrawlRun`/`SourceRun` observability data.
+   - Avoids auth-gated or hostile scraping; adapters must be allowlisted by source config.
+
+4. **Normalization/deduplication/ranking layer — FastAPI backend/worker code**
+   - Converts raw postings into canonical `Job` records.
+   - Merges likely duplicates into one visible job while preserving multiple apply/source links.
+   - Applies hard filters, AI extraction, fit bucket assignment, summary/concerns, and uncertainty flags.
+
+5. **AI service layer — Python backend module**
+   - Provides typed functions for job field extraction, fit evaluation, summary/concerns, and source suggestions.
+   - Does not generate application materials.
+   - Logs AI request metadata/cost estimate where possible, but not full sensitive prompts unless explicitly needed for debugging.
+
+### First milestone build shape
+
+The first milestone should not wait for polished onboarding. It should include:
+
+- a seeded/admin-configured single profile in the database or config seed;
+- a seeded source list covering a few companies across Greenhouse, Lever, and Ashby where allowed;
+- scripts or protected endpoints to run crawl and ranking;
+- a simple dashboard styled after the mock;
+- a debug view for crawl/source coverage.
+
+Full resume upload and profile editing come after the pipeline proves useful.
+
+### Ingestion approach
+
+Represent every crawl as a `CrawlRun`, with per-source `SourceRun` rows. A source run records status, started/finished time, jobs discovered, jobs inserted/updated, jobs skipped, and an error summary if any.
+
+Initial adapters:
+
+- **Greenhouse adapter:** consume public Greenhouse job board endpoints/pages for allowlisted companies.
+- **Lever adapter:** consume public Lever postings for allowlisted companies.
+- **Ashby adapter:** consume public Ashby postings for allowlisted companies.
+- **Generic company source adapter:** fetch and parse low-friction public career URLs only when explicitly allowlisted. Keep this adapter conservative; if parsing is unreliable, create raw records marked Needs Review rather than expanding scraper complexity.
+
+Do not implement broad web crawling in the first milestone. Search-engine/source discovery should be a later feature that proposes new sources for approval, not an automatic crawler.
+
+### Deduplication approach
+
+Use conservative deterministic deduplication first:
+
+- canonical company name;
+- normalized title;
+- normalized location/remote policy;
+- source posting ID when available;
+- apply URL/domain when available.
+
+If two postings match strongly, merge them into one `Job` and preserve all `JobLink` rows. If uncertain, do not merge; duplicate clutter is less harmful than hiding a legitimate different role.
+
+### Ranking approach
+
+Ranking is a stored result, not computed live on dashboard load. A `JobEvaluation` stores:
+
+- fit bucket;
+- ranking score for internal sorting only;
+- matched skills/preferences;
+- concerns/gaps;
+- uncertainty flags;
+- model/provider/version metadata;
+- evaluated timestamp.
+
+The visible UI should show buckets and explanations, not numeric scores.
+
+Use a two-step ranking path:
+
+1. Deterministic prefiltering and metadata checks for hard constraints and obvious rejects.
+2. AI-assisted evaluation for jobs that pass or are uncertain enough to review.
+
+Jobs with missing salary or unclear remote/work-auth details should usually remain visible, ranked lower or placed in Needs Review, unless they contradict explicit hard filters.
+
+### Dashboard approach
+
+Build these views:
+
+- **For You:** default view, new jobs since last visit grouped by fit bucket.
+- **Saved:** saved jobs count and list.
+- **All Jobs:** active non-dismissed jobs, filterable/searchable.
+- **Dismissed/Archived:** dismissed and closed jobs.
+- **Debug/Coverage:** internal view for last crawl, source statuses, counts, and errors.
+
+Each job card should include:
+
+- company initials/logo placeholder;
+- company name and title;
+- badges for location/remote, employment type if available, salary if available/unknown;
+- fit bucket or Needs Review label;
+- save button;
+- dismiss button with reason flow;
+- Apply link opening the canonical or best available apply URL;
+- expandable details with fit explanation, concerns, source links, and raw posting timestamp.
+
+The mock should guide color, spacing, rounded cards, and soft tone, but software-engineering job metadata and fit explanations take priority over exact visual fidelity.
+
+### Privacy and access approach
+
+For any hosted deployment:
+
+- require authentication;
+- restrict access to a single configured user/email for MVP;
+- protect backend crawl/admin endpoints with auth and/or a server-only cron secret;
+- use a database/hosting provider with encryption at rest;
+- avoid storing raw resume files in milestone one because the profile is admin-configured;
+- when onboarding is added, extract structured profile data and delete the raw upload unless the user explicitly chooses retention;
+- if raw resumes or highly sensitive optional fields are retained later, encrypt those values at the application level before storage;
+- provide MVP actions to delete profile-derived data, delete job feedback/history, and export saved jobs.
+
+Before enabling third-party AI calls, add an explicit consent setting for the user/profile and record the provider/model family allowed for matching. Review provider data-retention terms during implementation; prefer providers/settings that do not train on submitted data. Do not require an enterprise DPA or on-prem model for the personal MVP unless provider terms make ordinary API use unacceptable.
+
+Do not store full AI prompts/responses containing sensitive profile data by default. Store structured outputs and minimal model metadata. If debug logging is needed, add redaction or short retention.
+
+### Cost approach
+
+Control cost by:
+
+- running AI ranking only on new or materially changed jobs;
+- caching `JobEvaluation` by job content hash + profile version;
+- batching or rate-limiting AI calls;
+- starting with curated source lists rather than broad crawling;
+- making on-demand refresh explicit and statusful;
+- storing per-run AI call counts and estimated cost;
+- adding a configurable monthly AI budget/soft cap and surfacing a warning when usage approaches it.
+
+### Failure handling
+
+Partial crawl success is expected. A failed source should not fail the whole run. Store source-level errors, retry failed sources later, and only surface repeated failures prominently.
+
+Track crawl duration and source counts in `CrawlRun`/`SourceRun`. If daily crawls approach hosting timeout limits or regularly require concurrent execution, migrate the crawl/evaluation pipeline from synchronous FastAPI cron/CLI jobs to a queue-backed worker. Do not introduce the queue before the simple backend job approach proves insufficient.
+
+If an apply link fails:
+
+- mark the associated job possibly closed;
+- try alternate preserved links;
+- attempt a conservative re-check of the company/source page;
+- show a dashboard warning instead of immediately deleting the job.
+
+## Data / interfaces
+
+### Core database tables
+
+Names are conceptual; exact SQLAlchemy model names can match these.
+
+#### UserProfile
+
+Single-user for MVP but shaped to avoid blocking future multi-user support.
+
+- `id`
+- `ownerUserId`
+- `targetRoleFamilies: string[]`
+- `seniorityMin`, `seniorityMax`
+- `remotePreference`
+- `allowedLocations: string[]`
+- `workAuthorizationConstraints: string[]`
+- `salaryFloor`
+- `preferredTech: string[]`
+- `avoidedTech: string[]`
+- `preferredIndustries: string[]`
+- `avoidedIndustries: string[]`
+- `companyStagePreferences: string[]`
+- `dealbreakers: string[]`
+- `notes`
+- `profileVersion`
+- timestamps
+
+#### JobSource
+
+- `id`
+- `kind`: `greenhouse | lever | ashby | company_page`
+- `name`
+- `companyName`
+- `baseUrl`
+- `externalBoardId`
+- `status`: `active | paused | needs_review`
+- `approvalStatus`: `approved | suggested | rejected`
+- `lastSuccessfulCrawlAt`
+- `lastErrorAt`
+- `lastErrorSummary`
+- timestamps
+
+#### CrawlRun
+
+- `id`
+- `trigger`: `daily | on_demand | manual_script`
+- `status`: `running | partial_success | success | failed`
+- `startedAt`, `finishedAt`
+- aggregate counts: sources attempted/succeeded/failed, jobs discovered/new/updated/skipped
+
+#### SourceRun
+
+- `id`
+- `crawlRunId`
+- `jobSourceId`
+- `status`: `running | success | failed | skipped`
+- `startedAt`, `finishedAt`
+- counts: discovered/inserted/updated/skipped
+- `errorSummary`
+
+#### RawJobPosting
+
+- `id`
+- `jobSourceId`
+- `sourcePostingId`
+- `sourceUrl`
+- `applyUrl`
+- `rawTitle`
+- `rawCompany`
+- `rawLocation`
+- `rawDescription`
+- `contentHash`
+- `firstSeenAt`
+- `lastSeenAt`
+- `closedDetectedAt`
+
+#### Job
+
+- `id`
+- `canonicalTitle`
+- `canonicalCompany`
+- `canonicalLocation`
+- `remotePolicy`: `remote | hybrid | onsite | unclear`
+- `employmentType`
+- `salaryMin`, `salaryMax`, `salaryCurrency`, `salaryUnknown`
+- `seniority`
+- `status`: `new | seen | saved | dismissed | possibly_closed | closed_archived`
+- `fitBucket`: `strong | possible | stretch | needs_review`
+- `createdAt`, `updatedAt`, `firstSeenAt`, `lastSeenAt`
+
+#### JobLink
+
+- `id`
+- `jobId`
+- `rawJobPostingId`
+- `sourceUrl`
+- `applyUrl`
+- `isPrimary`
+- `lastCheckedAt`
+- `status`: `active | broken | possibly_closed | closed`
+
+#### JobEvaluation
+
+- `id`
+- `jobId`
+- `profileId`
+- `profileVersion`
+- `jobContentHash`
+- `fitBucket`
+- `internalScore`
+- `matchedSkills: string[]`
+- `matchedPreferences: string[]`
+- `concerns: string[]`
+- `uncertainties: string[]`
+- `summary`
+- `verifyBeforeApplying: string[]`
+- `salaryUncertainty`: `known | unknown | estimated | conflicting`
+- `remoteUncertainty`: `clear | unclear | conflicting`
+- `workAuthUncertainty`: `clear | unclear | conflicting`
+- `modelProvider`
+- `modelName`
+- `evaluatedAt`
+
+#### JobFeedback
+
+- `id`
+- `jobId`
+- `profileId`
+- `action`: `save | dismiss | more_like_this | less_like_this | ai_wrong`
+- `reasons: string[]`
+- `freeText`
+- `createdAt`
+
+### Internal service interfaces
+
+Keep these as small modules/functions, not classes unless needed.
+
+- `crawlSources(trigger): Promise<CrawlRunSummary>`
+- `crawlSource(source): Promise<RawJobPosting[]>`
+- `normalizePosting(raw): Promise<NormalizedJobCandidate>`
+- `dedupeAndUpsert(candidate): Promise<Job>`
+- `evaluateJob(job, profile): Promise<JobEvaluation>`
+- `rerankUnevaluatedJobs(profile): Promise<void>`
+- `saveJob(jobId, reasons)`
+- `dismissJob(jobId, reasons, freeText?)`
+- `exportSavedJobs(profileId): Promise<CsvOrJson>`
+- `deleteProfileData(profileId)`
+
+### API/routes
+
+The Next.js frontend owns UI routes; the FastAPI backend owns data/action APIs.
+
+Frontend routes:
+
+- `GET /` or `/for-you` — default dashboard.
+- `GET /saved`
+- `GET /jobs`
+- `GET /archived`
+- `GET /debug/coverage`
+
+Backend API endpoints:
+
+- `GET /api/jobs` — list/filter jobs for dashboard views.
+- `GET /api/jobs/{id}` — job detail with evaluation and links.
+- `POST /api/jobs/{id}/save`
+- `POST /api/jobs/{id}/dismiss`
+- `POST /api/jobs/{id}/seen`
+- `POST /api/crawl/run` — authenticated on-demand trigger.
+- `POST /api/cron/daily-crawl` — protected by cron secret.
+- `POST /api/rank/run` — admin/protected reranking.
+- `GET /api/debug/coverage`
+- `GET /api/export/saved`
+- `DELETE /api/profile`
+- `DELETE /api/job-history`
+
+## Risks
+
+### Source coverage may disappoint before search expansion
+
+Curated ATS/company sources can prove the pipeline but may not find enough roles. Mitigation: make coverage visible from milestone one and treat source expansion as a near-term follow-up.
+
+### Scraping/ToS ambiguity
+
+Even public pages can have unclear terms or brittle markup. Mitigation: start with structured public ATS endpoints/pages and explicit allowlists; avoid auth-gated or hostile sources.
+
+### AI ranking quality may be noisy
+
+The first evaluator may over/under-rank jobs or misread unclear requirements. Mitigation: show concerns/uncertainties, collect dismiss/save reasons, allow Needs Review, and cache evaluations by profile/content versions for debugging.
+
+### Sensitive data exposure through logs or AI prompts
+
+Resume-derived profile information may leak through application logs or provider calls. Mitigation: do not log full prompts/responses by default; store structured outputs; require explicit consent for third-party AI; keep profile fields minimal.
+
+### Backend job execution may outgrow simple cron/CLI
+
+A protected FastAPI endpoint or CLI job is simple, but long crawls may time out or become hard to parallelize as sources grow. Mitigation: acceptable for first milestone; record crawl duration/source counts, add warnings when runs approach platform timeout limits, and split into a real queue-backed worker only when measured crawl duration demands it.
+
+### Dashboard can become cluttered
+
+Fit buckets and job states help, but dedupe uncertainty and Needs Review jobs can accumulate. Mitigation: filter/search, old job access, explicit archived/dismissed views, conservative defaults.
+
+## Rollout
+
+1. **Project foundation**
+   - Initialize a Next.js/TypeScript/Tailwind frontend and a FastAPI/Python backend.
+   - Add backend env validation, frontend env validation, auth skeleton, and base layout styled after the mock.
+
+2. **Schema and seed data**
+   - Add SQLAlchemy models and Alembic migrations for profile, sources, crawl runs, raw postings, jobs, links, evaluations, and feedback.
+   - Seed one profile and a small approved source list.
+
+3. **Source adapters and crawl observability**
+   - Implement Greenhouse, Lever, Ashby adapters and conservative company-page adapter.
+   - Record crawl/source runs and raw postings.
+
+4. **Normalize, dedupe, and status model**
+   - Normalize postings, upsert canonical jobs, preserve links, and implement job lifecycle states.
+
+5. **AI evaluation service**
+   - Add typed AI adapter and job evaluation pipeline.
+   - Store fit buckets, summaries, concerns, uncertainty, and metadata.
+
+6. **Dashboard MVP**
+   - Implement For You, Saved, All Jobs, Archived/Possibly Closed, job cards, filters, apply links, save/dismiss feedback.
+
+7. **Crawl triggers and debug view**
+   - Add protected backend daily cron/CLI entrypoint, on-demand trigger, reranking trigger, and coverage/debug page.
+
+8. **Privacy/data controls**
+   - Add export saved jobs, delete profile-derived data, delete feedback/history.
+
+9. **Onboarding follow-up**
+   - Add resume upload, extraction, confirmation/edit flow, and profile versioning after the first pipeline milestone is validated.
+
+## Verification
+
+### Automated checks
+
+- Typecheck/lint/build pass once commands are established in `AGENTS.md`.
+- Unit tests for:
+  - source adapter parsing using fixture responses;
+  - normalization and minimum-field validation;
+  - deterministic deduplication cases;
+  - job state transitions;
+  - hard-filter behavior for location/work-auth/salary/seniority;
+  - feedback reason persistence;
+  - API authorization on crawl/admin/destructive endpoints.
+
+### Integration checks
+
+- Seed profile + source list can run a crawl and create `CrawlRun`, `SourceRun`, `RawJobPosting`, `Job`, and `JobLink` records.
+- Re-running the same crawl updates `lastSeenAt` and does not create duplicate visible jobs.
+- AI evaluation creates stored `JobEvaluation` rows and dashboard reads cached evaluations without live AI calls.
+- Partial source failure produces partial results and records the failed `SourceRun`.
+- Repeated source failures are visible in the debug view without blocking successful sources.
+- Broken apply-link check marks a link/job possibly closed without deleting it.
+- Crawl duration, source counts, AI call count, and estimated AI cost are recorded per run.
+
+### Product acceptance checks
+
+- Dashboard default shows new jobs grouped by Strong Fit/Possible Fit/Stretch/Needs Review.
+- Saved count and Saved page update after saving a job.
+- Dismiss flow records structured reason and removes the job from For You/All active views.
+- Apply button opens a preserved apply link.
+- Debug view shows last crawl time, sources searched, jobs discovered/new, and source errors.
+- Old jobs remain accessible outside the default new-jobs view.
+- Sensitive/destructive actions require authentication.
+
+### Manual MVP usefulness check
+
+After real sources are seeded, run the system for several days and verify qualitatively that it saves time, finds relevant software engineering roles worth saving/applying to, and exposes enough source coverage information to guide expansion.
+
+Track lightweight quantitative signals during this check:
+
+- saved jobs per week;
+- dismissed jobs by reason;
+- percentage of shown jobs marked save-worthy;
+- number of discovered jobs she believes she would not have found manually;
+- obvious duplicate rate in the dashboard;
+- number of source failures and stale/broken apply links.
+
+These metrics are guide rails, not hard product success gates; the personal MVP still succeeds or fails on whether she actually finds the recommendations useful.
