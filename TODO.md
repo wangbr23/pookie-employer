@@ -25,7 +25,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: backend has Alembic installed/configured, migration commands documented, Alembic imports backend settings/database metadata, and an empty/no-op migration workflow can run without defining domain tables yet.
 - [x] `T36` Add core profile/source/crawl schema migration — agent, depends-on: T7, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: SQLAlchemy models and one Alembic migration cover user profile, job sources, crawl runs, source runs, and raw job postings with explicit enums and indexes needed for ingestion; migration applies cleanly on a fresh database.
-- [ ] `T37` Add job recommendation and feedback schema migration — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T37` Add job recommendation and feedback schema migration — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: SQLAlchemy models and one Alembic migration cover canonical jobs, job links, job evaluations, and job feedback with explicit enums for job status, link status, fit buckets, uncertainty, and feedback actions; migration applies cleanly after `T36`.
 - [ ] `T8` Seed one profile and initial approved source list — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a documented seed command that creates one admin-configured profile and a small approved source list without duplicating rows on repeated runs.

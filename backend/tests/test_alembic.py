@@ -43,7 +43,7 @@ def test_alembic_env_configuration():
 
     versions_dir = backend_dir / "alembic" / "versions"
     assert versions_dir.is_dir()
-    assert script_dir.get_heads() == ["0002_core_ingestion_schema"]
+    assert script_dir.get_heads() == ["0003_recommendation_schema"]
 
 
 def test_alembic_heads_command_runs_without_database():
@@ -59,7 +59,7 @@ def test_alembic_heads_command_runs_without_database():
     )
 
     assert result.returncode == 0, result.stderr
-    assert "0002_core_ingestion_schema (head)" in result.stdout
+    assert "0003_recommendation_schema (head)" in result.stdout
 
 
 def test_alembic_current_command():

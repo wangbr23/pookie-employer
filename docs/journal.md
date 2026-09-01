@@ -61,3 +61,11 @@ Added SQLAlchemy models and the `0002_core_ingestion_schema` Alembic revision fo
 ## 2026-09-01 — T36 completed
 
 Finished T36 after repairing validation in an isolated Python 3.13 environment. All 15 backend tests, Ruff, and mypy pass; Alembic reports `0002_core_ingestion_schema` as the head; offline upgrade SQL generates successfully with all six enum types emitted once. A live fresh-PostgreSQL upgrade could not be run because no local PostgreSQL server is available.
+
+## 2026-09-01 — T37 implementation begun
+
+Added SQLAlchemy models and the `0003_recommendation_schema` migration for canonical jobs, preserved job links, profile-specific evaluations, and user feedback. The migration’s offline SQL generates successfully with the expected enum/table ordering; T37 remains open pending final review and any live-database validation.
+
+## 2026-09-01 — T37 completed
+
+Validated T37 against a clean Homebrew PostgreSQL 15 database named `pookie_t37_verify`. Upgraded through `0003_recommendation_schema`, verified all expected tables and enum types, downgraded to `0002_core_ingestion_schema`, and upgraded again successfully. The full backend suite (17 tests), Ruff, and mypy pass.
