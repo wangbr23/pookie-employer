@@ -37,3 +37,7 @@ Completed `T5`: updated `AGENTS.md` with concrete frontend/backend install, dev,
 ## 2026-08-31 — T6 backend config and database layer
 
 Completed `T6`: added typed FastAPI settings loaded from environment, SQLAlchemy engine/session setup for PostgreSQL, safe database URL redaction, dependency updates, backend configuration documentation, and pytest coverage for config/database initialization and secret redaction.
+
+## 2026-08-31 — on-demand refresh and deployment plan update
+
+Updated the design and tasks to make on-demand refresh the first-milestone behavior, with daily scheduling deferred. Added a 90-second refresh budget strategy using bounded source concurrency, per-source and total timeouts, unchanged-job skipping, AI evaluation caps, partial results, and refresh status. Added deployment guidance: keep the monorepo, deploy the Next.js frontend from `frontend/`, deploy the FastAPI backend from `backend/`, and use managed PostgreSQL for durable production storage instead of local Docker Postgres.

@@ -71,3 +71,23 @@ Append-only log of architecture decisions. One entry per decision, newest at the
 **Decision:** The FastAPI backend is the sole owner of domain database writes, SQLAlchemy/Alembic migrations, ingestion/ranking execution, AI provider integration, API authorization, and sensitive domain logic. The Next.js frontend owns presentation and user interaction only, calling documented backend REST APIs. FastAPI OpenAPI is the API contract source. See `docs/designs/2026-08-31-pookie-employer.md` for the boundary matrix.
 
 **Consequences:** Implementation tasks should avoid direct frontend database access and duplicated business rules. Auth/CORS/API-contract setup becomes an early foundation task before dashboard and backend work proceed in parallel.
+
+## 2026-08-31 — Start with on-demand refresh and defer daily scheduling
+
+**Status:** Accepted
+
+**Context:** The app is for one user and should keep early infrastructure and AI costs low. Daily scheduled crawling may spend money when nobody is using the app and adds deployment/scheduler complexity before recommendation quality is proven. The main UX concern with on-demand refresh is avoiding long waits.
+
+**Decision:** The first milestone will use on-demand refresh only. Refresh should target completion within 90 seconds for the approved source set by using bounded concurrency, strict per-source/total timeouts, unchanged-job skipping, deterministic filtering before AI, AI evaluation caps, partial results, and visible refresh status. Daily scheduled refresh is deferred until on-demand results prove useful and the user wants proactive updates.
+
+**Consequences:** Deployment no longer needs a production scheduler for the first milestone. Backend crawl/rank endpoints and tasks should be framed around on-demand refresh/status. Debug/coverage UI must show elapsed time, failed/slow sources, pending evaluations, and partial results so the user is not blocked by slow sources.
+
+## 2026-08-31 — Deploy as monorepo services with managed durable Postgres
+
+**Status:** Accepted
+
+**Context:** The current `localhost` Postgres is only for local development. The user needs a durable production store and simple deployment path without splitting the GitHub repository.
+
+**Decision:** Keep the monorepo. Deploy the Next.js frontend from `frontend/` and the FastAPI backend from `backend/` as separate services. Use managed PostgreSQL for production durability. Vercel is preferred for the frontend; Railway or Render are acceptable for the backend and managed Postgres, with Railway likely simplest for early MVP. Local Docker Postgres remains development-only.
+
+**Consequences:** Production environment variables must point at managed services, not localhost. Deployment docs must cover frontend origin/CORS, backend URL/secrets, managed `DATABASE_URL`, AI keys when approved, and the on-demand refresh flow. Free/trial tiers may be used for development, but any ephemeral/free database must not be treated as durable production storage.

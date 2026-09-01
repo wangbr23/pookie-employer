@@ -6,7 +6,7 @@
 
 ## Problem
 
-Pookie Employer needs to turn a sensitive personal job-search profile into a daily set of trustworthy job recommendations from external sources. The core technical problem is not merely displaying jobs; it is building a small, reliable ingestion and ranking pipeline that can:
+Pookie Employer needs to turn a sensitive personal job-search profile into trustworthy job recommendations from external sources when she asks for a refresh. The core technical problem is not merely displaying jobs; it is building a small, reliable ingestion and ranking pipeline that can:
 
 - collect jobs from public/ATS/company sources without hostile scraping;
 - preserve source coverage/debug information so missed-source risk is visible;
@@ -19,7 +19,7 @@ Pookie Employer needs to turn a sensitive personal job-search profile into a dai
 From `docs/specs/pookie-employer.md`, the MVP must include:
 
 - automated external job discovery from day one;
-- daily background refresh plus on-demand refresh;
+- on-demand refresh for the first milestone, with daily scheduled refresh deferred until the product proves useful;
 - first milestone support for a hardcoded/admin-configured profile before full onboarding;
 - structured ATS platforms plus a small curated company/source list as the initial source set;
 - legal/ToS-safe ingestion: avoid auth-gated, explicitly prohibited, anti-bot-bypass, and hostile scraping;
@@ -82,12 +82,12 @@ Recommended concrete stack:
 - Styling: Tailwind CSS, matching the soft visual direction in `docs/specs/mocks/mock.png`.
 - Backend runtime/language: Python 3.12+.
 - Backend framework: FastAPI.
-- Backend jobs: FastAPI service functions plus CLI/cron entrypoints for crawl/rank jobs; add a queue only when measured crawl duration/concurrency requires it.
+- Backend jobs: FastAPI service functions plus on-demand API/CLI entrypoints for crawl/rank jobs; add scheduled refresh or a queue only when measured usage requires it.
 - Database: PostgreSQL.
 - Database access: SQLAlchemy 2.x + Alembic migrations on the backend. The frontend should access data through backend APIs, not direct database writes.
 - Auth: simple hosted auth or provider-backed auth for the frontend, with backend API authorization and a single allowed account for MVP.
 - AI provider adapter: one internal Python `ai` service interface, initially backed by a low-cost hosted LLM API chosen at implementation time.
-- Scheduling: a daily hosted cron or scheduler calls a protected backend endpoint/CLI job; the dashboard can trigger on-demand refresh through the backend.
+- Scheduling: no daily cron in the first milestone. The dashboard triggers on-demand refresh through the backend; scheduled refresh is a later enhancement.
 
 Why this pick:
 
@@ -96,7 +96,7 @@ Why this pick:
 - Next.js remains a strong fit for the warm dashboard and fast UI iteration.
 - PostgreSQL handles relational job/source/run data well and avoids premature search infrastructure.
 - Keeping the frontend out of direct database writes gives a clearer privacy and authorization boundary.
-- Starting with FastAPI cron/CLI jobs is simpler than introducing a queue immediately, while preserving an obvious path to a worker queue later.
+- Starting with on-demand FastAPI API/CLI jobs is cheaper and simpler than introducing a scheduler or queue immediately, while preserving an obvious path to scheduled or queued workers later.
 
 Update `AGENTS.md` after this design is accepted to record the selected stack and commands.
 
@@ -140,7 +140,7 @@ The frontend/backend split is justified because ingestion, crawling, parsing, ra
 | API authorization decisions | FastAPI backend | Backend must enforce access even if frontend hides UI. |
 | Job/source/profile/feedback database writes | FastAPI backend | Backend is the only service that writes domain data. |
 | Database schema/migrations | FastAPI backend | SQLAlchemy/Alembic is the source of truth. Frontend consumes API contracts. |
-| Crawl/rank execution | FastAPI backend | Triggered by scheduler, CLI, or authenticated backend endpoint. |
+| Crawl/rank execution | FastAPI backend | Triggered by authenticated backend endpoint or CLI for MVP; scheduler is deferred. |
 | AI provider integration | FastAPI backend | Consent, prompt construction, output parsing, cost metadata, and redaction live here. |
 | Static UI styling/mock implementation | Next.js frontend | Tailwind components should follow the mock's tone. |
 
@@ -151,7 +151,7 @@ For MVP authentication, use one of these simple patterns during implementation:
 1. **Shared auth provider/JWT:** frontend obtains a session token, backend verifies it and restricts access to one allowed user/email; or
 2. **Frontend proxy with backend API secret:** frontend server routes call the backend using a server-only API key, while the frontend still authenticates the user before proxying.
 
-Prefer the shared JWT approach if the chosen auth provider makes backend verification straightforward. Use the proxy/API-secret approach only if it significantly reduces setup for the personal MVP. In both cases, backend cron/admin/destructive endpoints require explicit protection and must not rely on obscurity.
+Prefer the shared JWT approach if the chosen auth provider makes backend verification straightforward. Use the proxy/API-secret approach only if it significantly reduces setup for the personal MVP. In both cases, backend refresh/admin/destructive endpoints require explicit protection and must not rely on obscurity.
 
 Operational conventions across services:
 
@@ -167,7 +167,7 @@ The first milestone should not wait for polished onboarding. It should include:
 
 - a seeded/admin-configured single profile in the database or config seed;
 - a seeded source list covering a few companies across Greenhouse, Lever, and Ashby where allowed;
-- scripts or protected endpoints to run crawl and ranking;
+- scripts or protected on-demand endpoints to run crawl and ranking;
 - a simple dashboard styled after the mock;
 - a debug view for crawl/source coverage.
 
@@ -248,7 +248,7 @@ For any hosted deployment:
 
 - require authentication;
 - restrict access to a single configured user/email for MVP;
-- protect backend crawl/admin endpoints with auth and/or a server-only cron secret;
+- protect backend refresh/admin endpoints with auth and, where needed, a server-only API secret;
 - use a database/hosting provider with encryption at rest;
 - avoid storing raw resume files in milestone one because the profile is admin-configured;
 - when onboarding is added, extract structured profile data and delete the raw upload unless the user explicitly chooses retention;
@@ -271,11 +271,36 @@ Control cost by:
 - storing per-run AI call counts and estimated cost;
 - adding a configurable monthly AI budget/soft cap and surfacing a warning when usage approaches it.
 
+### On-demand refresh performance approach
+
+The first milestone uses **on-demand refresh only**. It should feel interactive and target a **90-second refresh budget** for the approved source set. The goal is not to guarantee every source always finishes; the goal is to return useful, fresh results quickly and record what did not finish.
+
+Backend refresh policy:
+
+- Fetch approved sources concurrently with bounded concurrency.
+- Apply strict per-source timeouts, initially around 8 seconds.
+- Apply a total crawl budget, initially around 60 seconds.
+- Reserve the remaining budget, initially around 30 seconds, for normalization/dedupe and AI evaluation.
+- Skip unchanged postings using `contentHash` and profile version where applicable.
+- Run deterministic filtering before AI evaluation.
+- Cap AI evaluations per refresh, initially around 25 new/changed jobs.
+- If more jobs need evaluation, mark the remaining work as pending and let the user run another ranking pass later.
+- Record partial results, skipped unchanged jobs, slow/failed sources, pending evaluations, elapsed time, and AI cost metadata.
+
+Dashboard refresh UX:
+
+- Show a `Refresh jobs` action rather than implying automatic daily updates.
+- Show status while refresh runs: sources searched, jobs found, jobs evaluated, slow/failed sources, and pending evaluations.
+- Display partial results as soon as the backend run completes within budget.
+- Do not make the user wait for slow sources or all AI evaluations before showing useful results.
+
+Daily scheduled refresh is a later enhancement. Add it only if she wants proactive updates after on-demand refresh proves useful.
+
 ### Failure handling
 
 Partial crawl success is expected. A failed source should not fail the whole run. Store source-level errors, retry failed sources later, and only surface repeated failures prominently.
 
-Track crawl duration and source counts in `CrawlRun`/`SourceRun`. If daily crawls approach hosting timeout limits or regularly require concurrent execution, migrate the crawl/evaluation pipeline from synchronous FastAPI cron/CLI jobs to a queue-backed worker. Do not introduce the queue before the simple backend job approach proves insufficient.
+Track crawl duration and source counts in `CrawlRun`/`SourceRun`. If on-demand refresh routinely exceeds the 90-second budget, needs background continuation, or regularly requires concurrent execution, migrate the crawl/evaluation pipeline from synchronous FastAPI API/CLI jobs to a queue-backed worker. Do not introduce the queue before the simple backend job approach proves insufficient.
 
 If an apply link fails:
 
@@ -330,10 +355,11 @@ Single-user for MVP but shaped to avoid blocking future multi-user support.
 #### CrawlRun
 
 - `id`
-- `trigger`: `daily | on_demand | manual_script`
+- `trigger`: `on_demand | manual_script | scheduled`
 - `status`: `running | partial_success | success | failed`
 - `startedAt`, `finishedAt`
-- aggregate counts: sources attempted/succeeded/failed, jobs discovered/new/updated/skipped
+- aggregate counts: sources attempted/succeeded/failed, jobs discovered/new/updated/skipped, evaluations completed/pending
+- timing/cost fields: elapsed milliseconds, AI call count, estimated AI cost
 
 #### SourceRun
 
@@ -453,12 +479,34 @@ Backend API endpoints:
 - `POST /api/jobs/{id}/dismiss`
 - `POST /api/jobs/{id}/seen`
 - `POST /api/crawl/run` — authenticated on-demand trigger.
-- `POST /api/cron/daily-crawl` — protected by cron secret.
+- `GET /api/crawl/runs/{id}` — authenticated refresh status/result endpoint.
 - `POST /api/rank/run` — admin/protected reranking.
 - `GET /api/debug/coverage`
 - `GET /api/export/saved`
 - `DELETE /api/profile`
 - `DELETE /api/job-history`
+
+## Deployment plan
+
+Keep the monorepo. The production deployment should point each platform at the relevant subdirectory rather than splitting repositories.
+
+Recommended first deployment path:
+
+- **Frontend:** Vercel project with root directory `frontend/`.
+- **Backend:** Railway or Render web service with root directory `backend/`.
+- **Database:** managed PostgreSQL, preferably on the same provider as the backend for the first MVP unless Neon/Supabase is clearly easier.
+- **Durability:** production uses managed PostgreSQL with persistent storage/backups. The Docker Compose PostgreSQL service and `localhost` `DATABASE_URL` are local-development only.
+- **Refresh:** no production scheduler for the first milestone. The dashboard calls the backend on-demand refresh endpoint. Scheduled refresh can be added later if desired.
+
+For a one-user MVP, optimize for low cost and low operational overhead:
+
+- Prefer free/trial tiers during development if they support the needed runtime and durable database constraints.
+- Do not depend on an ephemeral/free database for real use; if the free database can expire or be wiped, treat it as development-only.
+- Use environment variables for production secrets: `DATABASE_URL`, auth settings, backend API auth/proxy secret if used, allowed frontend origins, and AI provider keys once approved.
+- Restrict backend CORS to the deployed Vercel origin plus local dev origins.
+- Keep backend admin/refresh endpoints protected even though there is only one user.
+
+Railway is likely the simplest early single-provider path because it can host FastAPI and managed Postgres together. Vercel remains a good fit for the frontend. Render is also acceptable for the FastAPI backend and managed Postgres if its pricing/sleep behavior is acceptable.
 
 ## Risks
 
@@ -482,9 +530,9 @@ Resume-derived profile information may leak through application logs or provider
 
 A split frontend/backend architecture adds another boundary where auth assumptions, CORS, API schemas, and error handling can drift. Mitigation: backend enforces authorization for every sensitive action, FastAPI OpenAPI is the API contract source, CORS is allowlisted, and breaking API changes land with matching frontend changes.
 
-### Backend job execution may outgrow simple cron/CLI
+### On-demand refresh may exceed the 90-second UX budget
 
-A protected FastAPI endpoint or CLI job is simple, but long crawls may time out or become hard to parallelize as sources grow. Mitigation: acceptable for first milestone; record crawl duration/source counts, add warnings when runs approach platform timeout limits, and split into a real queue-backed worker only when measured crawl duration demands it.
+A protected FastAPI endpoint or CLI job is simple, but slow sources or too many AI evaluations can make the user wait too long. Mitigation: use bounded source concurrency, strict per-source and total timeouts, unchanged-job skipping, AI evaluation caps, partial results, and explicit pending-evaluation reporting. Move to a queue-backed worker only when measured refresh times prove the synchronous backend job is insufficient.
 
 ### Dashboard can become cluttered
 
@@ -514,8 +562,8 @@ Fit buckets and job states help, but dedupe uncertainty and Needs Review jobs ca
 6. **Dashboard MVP**
    - Implement For You, Saved, All Jobs, Archived/Possibly Closed, job cards, filters, apply links, save/dismiss feedback.
 
-7. **Crawl triggers and debug view**
-   - Add protected backend daily cron/CLI entrypoint, on-demand trigger, reranking trigger, and coverage/debug page.
+7. **On-demand refresh triggers and debug view**
+   - Add protected backend on-demand refresh endpoint, CLI entrypoint, reranking trigger, refresh status endpoint, and coverage/debug page. Daily scheduled refresh stays deferred.
 
 8. **Privacy/data controls**
    - Add export saved jobs, delete profile-derived data, delete feedback/history.
@@ -541,14 +589,15 @@ Fit buckets and job states help, but dedupe uncertainty and Needs Review jobs ca
 
 - Frontend can fetch dashboard jobs from FastAPI using the chosen auth pattern; unauthenticated requests are rejected.
 - Backend CORS allows only local/dev and deployed frontend origins.
-- FastAPI OpenAPI schema covers job list/detail, feedback, crawl trigger, debug coverage, export, and deletion endpoints.
+- FastAPI OpenAPI schema covers job list/detail, feedback, on-demand refresh trigger/status, debug coverage, export, and deletion endpoints.
 - Seed profile + source list can run a crawl and create `CrawlRun`, `SourceRun`, `RawJobPosting`, `Job`, and `JobLink` records.
 - Re-running the same crawl updates `lastSeenAt` and does not create duplicate visible jobs.
 - AI evaluation creates stored `JobEvaluation` rows and dashboard reads cached evaluations without live AI calls.
 - Partial source failure produces partial results and records the failed `SourceRun`.
 - Repeated source failures are visible in the debug view without blocking successful sources.
 - Broken apply-link check marks a link/job possibly closed without deleting it.
-- Crawl duration, source counts, AI call count, and estimated AI cost are recorded per run.
+- Refresh duration, source counts, AI call count, estimated AI cost, slow/failed sources, and pending evaluation count are recorded per run.
+- On-demand refresh with fixture/seeded sources respects the configured per-source timeout, total crawl budget, AI evaluation cap, and target 90-second UX budget.
 
 ### Product acceptance checks
 
@@ -556,7 +605,8 @@ Fit buckets and job states help, but dedupe uncertainty and Needs Review jobs ca
 - Saved count and Saved page update after saving a job.
 - Dismiss flow records structured reason and removes the job from For You/All active views.
 - Apply button opens a preserved apply link.
-- Debug view shows last crawl time, sources searched, jobs discovered/new, and source errors.
+- Dashboard provides a Refresh jobs action and shows refresh status/result instead of depending on daily scheduled refresh.
+- Debug view shows last refresh time, sources searched, jobs discovered/new, source errors, elapsed time, and pending evaluations.
 - Old jobs remain accessible outside the default new-jobs view.
 - Sensitive/destructive actions require authentication.
 

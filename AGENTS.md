@@ -35,7 +35,13 @@ This section is only for what's specific to *this* repo:
 - Commit message format: short imperative subject, optionally prefixed with the task id, e.g. `T6 add backend settings`.
 
 ## Architecture
-(Placeholder — fill in once the system has real shape. High-level modules/services and how they talk to each other. Update this when the shape changes, not on every commit.)
+Pookie Employer is a two-service monorepo:
+
+- `frontend/` — Next.js dashboard. Owns presentation and user interactions only.
+- `backend/` — FastAPI service. Owns API authorization, domain database writes, migrations, ingestion, normalization, dedupe, AI ranking, refresh jobs, and source observability.
+- PostgreSQL is the shared persistence layer. Local Docker Postgres is development-only; production must use managed durable Postgres.
+
+First milestone uses user-triggered on-demand refresh rather than daily cron. Refresh should target a 90-second UX budget with bounded source concurrency, timeouts, unchanged-job skipping, AI evaluation caps, partial results, and visible status. Daily scheduled refresh is deferred.
 
 ## Agent workflow
 

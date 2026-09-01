@@ -34,8 +34,8 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: FastAPI exposes documented OpenAPI endpoints for job list, job detail, and debug coverage using database-backed or seeded placeholder data, with Pydantic response schemas matching the design.
 - [ ] `T11` Add job feedback API endpoints only — agent, depends-on: T7, T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: save, dismiss, and seen endpoints update job state/feedback with validation and authorization, tests cover valid and invalid transitions, and no frontend UI is changed.
-- [ ] `T12` Add protected crawl/rank trigger API stubs only — agent, depends-on: T9, design: docs/designs/2026-08-31-pookie-employer.md
-  - Done when: protected backend endpoints/CLI entrypoints exist for daily crawl, on-demand crawl, and rerank; they create or report stub run records safely; real source adapters and AI ranking are not implemented in this task.
+- [ ] `T12` Add protected on-demand refresh/rank trigger API stubs only — agent, depends-on: T9, design: docs/designs/2026-08-31-pookie-employer.md
+  - Done when: protected backend endpoints/CLI entrypoints exist for on-demand refresh, refresh status/result, and rerank; they create or report stub run records safely; daily scheduling, real source adapters, and AI ranking are not implemented in this task.
 
 ## Ingestion pipeline
 
@@ -47,8 +47,8 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: allowlisted Lever sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
 - [ ] `T16` Implement Ashby source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: allowlisted Ashby sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
-- [ ] `T17` Wire crawl orchestration across approved sources — agent, depends-on: T12, T14, T15, T16, design: docs/designs/2026-08-31-pookie-employer.md
-  - Done when: on-demand/daily crawl invokes approved source adapters, records aggregate and per-source counts/errors, returns partial success when some sources fail, and tests cover mixed success/failure.
+- [ ] `T17` Wire bounded on-demand refresh orchestration across approved sources — agent, depends-on: T12, T14, T15, T16, design: docs/designs/2026-08-31-pookie-employer.md
+  - Done when: on-demand refresh invokes approved source adapters with bounded concurrency, per-source timeouts, and a total crawl budget; records aggregate/per-source counts, elapsed time, slow/failed sources, and partial success; tests cover mixed success/failure and timeout behavior.
 
 ## Normalization, dedupe, and ranking
 
@@ -77,8 +77,8 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: frontend routes show saved jobs, dismissed/archived jobs, and possibly-closed jobs using backend data, with empty/loading/error states.
 - [ ] `T28` Wire save, dismiss, seen, and apply-link interactions — agent, depends-on: T11, T26, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: job cards can save, dismiss with structured reason, mark seen as appropriate, and open preserved apply links; backend state changes are reflected in the UI.
-- [ ] `T29` Build debug/coverage view — agent, depends-on: T10, T17, T25, design: docs/designs/2026-08-31-pookie-employer.md
-  - Done when: frontend debug page shows last crawl time, source statuses, counts, errors, crawl duration, AI call count/cost when available, and handles partial-failure states.
+- [ ] `T29` Build refresh status and debug/coverage view — agent, depends-on: T10, T17, T25, design: docs/designs/2026-08-31-pookie-employer.md
+  - Done when: frontend provides a Refresh jobs action, shows refresh status/result, and the debug page shows last refresh time, source statuses, counts, errors, elapsed time, AI call count/cost when available, pending evaluations, and partial-failure states.
 
 ## Operations and data controls
 
@@ -88,10 +88,10 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: backend supports protected deletion of profile-derived data and job feedback/history with tests; frontend UI is not included in this task.
 - [ ] `T32` Add frontend data deletion controls — agent, depends-on: T31, T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend exposes clearly labeled deletion controls with confirmation, calls backend deletion endpoints, and handles success/error states.
-- [ ] `T33` Add scheduled crawl deployment documentation — manual, depends-on: T17, design: docs/designs/2026-08-31-pookie-employer.md
-  - Done when: hosting/scheduler choice is selected, required secrets are available locally, and the daily crawl trigger command/URL is documented without committing secrets.
+- [ ] `T33` Select and document MVP deployment plan — manual, depends-on: T5, design: docs/designs/2026-08-31-pookie-employer.md
+  - Done when: frontend hosting, backend hosting, managed Postgres provider, durability expectations, required production secrets, and on-demand refresh deployment flow are selected/documented without committing secrets. Daily scheduled refresh remains explicitly deferred.
 - [ ] `T34` Add production-readiness smoke checks — agent, depends-on: T5, T17, T23, T29, T30, T32, T33, design: docs/designs/2026-08-31-pookie-employer.md
-  - Done when: documented smoke checklist verifies frontend/backend startup, authenticated dashboard access, crawl run, ranking run, debug coverage, save/dismiss, export, and deletion flows in a deployed or deployment-like environment.
+  - Done when: documented smoke checklist verifies frontend/backend startup, managed Postgres connectivity, authenticated dashboard access, on-demand refresh under the configured 90-second budget, ranking run, debug coverage, save/dismiss, export, and deletion flows in a deployed or deployment-like environment.
 
 ## Follow-up after first milestone
 

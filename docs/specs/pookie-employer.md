@@ -23,7 +23,7 @@ In scope:
 
 - Automated job discovery from external public/ATS/company sources.
 - Resume-derived profile plus explicit preferences and dealbreakers.
-- Daily refresh plus on-demand refresh.
+- On-demand refresh for the first milestone; daily scheduled refresh is a later enhancement if proactive updates become useful.
 - Fit buckets and explanations.
 - Dashboard for viewing, filtering/searching, saving, dismissing, and opening apply links.
 - Basic feedback loop through save/dismiss reasons and “more/less like this.”
@@ -227,7 +227,7 @@ The user should be able to delete/export data. MVP should support deletion of pr
 
 ## Performance and reliability
 
-Recommendations should generally be precomputed so the dashboard loads quickly. Daily crawling/ranking should run in the background. On-demand refresh can take minutes if it shows progress or status.
+Recommendations should generally be precomputed so the dashboard loads quickly. For the first milestone, crawling/ranking runs on demand when the user clicks Refresh jobs. The refresh should target completion within about 90 seconds by using bounded source concurrency, timeouts, unchanged-job skipping, AI evaluation caps, and partial results. Daily scheduled refresh is deferred until on-demand use proves valuable.
 
 If some sources fail during a crawl, the system should show partial results, record source errors, retry failed sources later, and notify only for repeated failures. A failed source should not fail the whole crawl.
 
