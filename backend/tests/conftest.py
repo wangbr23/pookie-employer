@@ -10,6 +10,7 @@ os.environ.setdefault(
     "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/pookie_test"
 )
 os.environ.setdefault("SECRET_KEY", "test-secret")
+os.environ.setdefault("API_SECRET", "test-api-secret")
 os.environ.setdefault("PYTHON_ENV", "test")
 
 from pookie_backend.main import app  # noqa: E402

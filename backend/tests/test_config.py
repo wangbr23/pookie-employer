@@ -11,6 +11,7 @@ def test_settings_load_required_environment() -> None:
     settings = Settings(
         DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/pookie_test",
         SECRET_KEY="test-secret",
+        API_SECRET="test-api-secret",
         PYTHON_ENV="test",
     )
 
@@ -25,6 +26,7 @@ def test_settings_requires_database_url_and_secret_key(
     """Required settings fail fast instead of defaulting to unsafe values."""
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.delenv("API_SECRET", raising=False)
 
     with pytest.raises(ValidationError) as exc_info:
         Settings(PYTHON_ENV="test", _env_file=None)
@@ -32,6 +34,7 @@ def test_settings_requires_database_url_and_secret_key(
     message = str(exc_info.value)
     assert "DATABASE_URL" in message
     assert "SECRET_KEY" in message
+    assert "API_SECRET" in message
     assert "postgres:postgres" not in message
 
 
@@ -40,8 +43,10 @@ def test_secret_key_is_redacted_in_repr() -> None:
     settings = Settings(
         DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/pookie_test",
         SECRET_KEY="super-sensitive-secret",
+        API_SECRET="super-sensitive-api-secret",
         PYTHON_ENV="test",
     )
 
     assert "super-sensitive-secret" not in repr(settings)
+    assert "super-sensitive-api-secret" not in repr(settings)
     assert "**********" in repr(settings)
