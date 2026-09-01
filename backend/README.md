@@ -126,6 +126,18 @@ A `Makefile` is provided with common commands:
 - `make format` – format code
 - `make typecheck` – run mypy
 
+### Database migrations with Alembic
+
+This project uses Alembic for database migrations. The following commands are available:
+
+- `make alembic-help` – show alembic help
+- `make alembic-current` – show current database revision
+- `make alembic-revision MESSAGE="migration message"` – create a new migration revision
+- `make alembic-upgrade` – upgrade database to latest revision
+- `make alembic-downgrade` – downgrade database revision
+
+Alembic automatically imports database settings from the application configuration.
+
 ## Project structure
 
 ```
