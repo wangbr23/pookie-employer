@@ -8,11 +8,11 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [x] `T1` Scaffold root repo structure for separate frontend and backend services — agent, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: repo has clear `frontend/` and `backend/` directories, root README/dev notes explain the two-service layout, root `.gitignore` covers common Node/Python/env artifacts, and no product behavior is implemented.
-- [ ] `T2` Scaffold Next.js/Tailwind frontend app only — agent, depends-on: T1, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T2` Scaffold Next.js/Tailwind frontend app only — agent, depends-on: T1, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: `frontend/` contains a Next.js App Router TypeScript app with Tailwind configured, the default page runs locally, and frontend install/dev/lint/build commands are documented.
-- [ ] `T3` Scaffold FastAPI backend app only — agent, depends-on: T1, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T3` Scaffold FastAPI backend app only — agent, depends-on: T1, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: `backend/` contains a Python 3.12+ FastAPI app with dependency management, `/health` route, pytest setup, lint/typecheck tooling, and backend install/dev/test commands documented.
-- [ ] `T4` Add local PostgreSQL development environment — agent, depends-on: T1, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T4` Add local PostgreSQL development environment — agent, depends-on: T1, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: local Postgres can be started with a documented command, connection env vars are templated without secrets, and neither frontend nor backend contains hardcoded credentials.
 - [ ] `T5` Update project commands and conventions after scaffolding — agent, depends-on: T2, T3, T4, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: `AGENTS.md` lists actual install/dev/test/lint/typecheck/build commands for frontend and backend, and `CLEANCODE.md` has any concrete repo-specific conventions discovered during scaffolding.

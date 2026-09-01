@@ -25,3 +25,7 @@ Patched `docs/designs/2026-08-31-pookie-employer.md` after an additional DeepSee
 ## 2026-08-31 — T1 repo structure scaffolded
 
 Completed `T1`: added `frontend/` and `backend/` directories with responsibility READMEs, added root `README.md` explaining the two-service layout, and expanded `.gitignore` for common Node, Python, environment, cache, OS, and editor artifacts. No product behavior was implemented.
+
+## 2026-08-31 — T2-T4 merged
+
+Merged reviewed scaffold branches for `T2`, `T3`, and `T4` into `main`: Next.js/Tailwind frontend scaffold, FastAPI backend scaffold with health/test/tooling setup, and local PostgreSQL Docker Compose/env documentation. Marked all three tasks complete in `TODO.md`.
