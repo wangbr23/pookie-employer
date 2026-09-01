@@ -35,7 +35,7 @@ brew services start postgresql
 createdb pookie_employer_dev
 ```
 
-Adjust the `DATABASE_URL` in your `.env` accordingly (e.g., `postgresql://localhost:5432/pookie_employer_dev`).
+Adjust the `DATABASE_URL` in your `.env` accordingly (e.g., `postgresql+psycopg://localhost:5432/pookie_employer_dev`).
 
 Connection configuration is templated in `.env.example`. Copy it to `.env` and adjust the `DATABASE_URL` as needed.
 

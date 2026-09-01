@@ -18,7 +18,7 @@ Python + FastAPI backend service for APIs and job-processing work.
 
 ### Prerequisites
 
--BashPython 3.12+ installed (recommended via `pyenv` or system Python).
+Python 3.12+ installed (recommended via `pyenv` or system Python).
 
 ### Setup
 
@@ -46,6 +46,24 @@ Python + FastAPI backend service for APIs and job-processing work.
    ```bash
    pip install -e .[dev]
    ```
+
+### Configuration
+
+The backend loads typed settings from environment variables and validates required values at startup.
+
+Required variables:
+
+- `DATABASE_URL` — SQLAlchemy database URL, e.g. `postgresql+psycopg://postgres:postgres@localhost:5432/pookie_employer_dev`
+- `SECRET_KEY` — secret value for future auth/session needs; use a strong local value and never commit it
+- `PYTHON_ENV` — `development`, `test`, or `production` (`development` by default)
+
+From the repo root, copy the template before running the backend:
+
+```bash
+cp .env.example .env
+```
+
+If you run commands from `backend/`, either export these variables in your shell or copy/link the root `.env` into `backend/.env` for local development. Do not commit `.env` files.
 
 ### Running the app
 

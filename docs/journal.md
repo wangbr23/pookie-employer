@@ -33,3 +33,7 @@ Merged reviewed scaffold branches for `T2`, `T3`, and `T4` into `main`: Next.js/
 ## 2026-08-31 — T5 commands and conventions updated
 
 Completed `T5`: updated `AGENTS.md` with concrete frontend/backend install, dev, lint/typecheck, test, format, and build commands from the scaffolds. Added repo-specific service-boundary, API-contract, and testing conventions to `CLEANCODE.md`. Updated root `README.md` development notes to match the current scaffold state.
+
+## 2026-08-31 — T6 backend config and database layer
+
+Completed `T6`: added typed FastAPI settings loaded from environment, SQLAlchemy engine/session setup for PostgreSQL, safe database URL redaction, dependency updates, backend configuration documentation, and pytest coverage for config/database initialization and secret redaction.

@@ -7,6 +7,9 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.6",
     "uvicorn[standard]>=0.34.0",
+    "pydantic-settings>=2.7.0",
+    "sqlalchemy>=2.0.36",
+    "psycopg[binary]>=3.2.3",
 ]
 
 [project.optional-dependencies]
@@ -52,6 +55,9 @@ target-version = ['py312']
 [tool.isort]
 profile = "black"
 line_length = 88
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
 
 [tool.mypy]
 python_version = "3.12"

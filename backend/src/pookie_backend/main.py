@@ -2,8 +2,12 @@
 
 from fastapi import FastAPI
 
+from pookie_backend.config import get_settings
+
+settings = get_settings()
+
 app = FastAPI(
-    title="Pookie Employer Backend",
+    title=settings.app_name,
     description="Backend API and job-processing pipeline for Pookie Employer.",
     version="0.1.0",
 )

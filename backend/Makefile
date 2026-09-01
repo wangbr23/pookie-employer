@@ -1,6 +1,7 @@
 .PHONY: install dev run test lint format typecheck help
 
 VENV = venv
+SYSTEM_PYTHON = python3
 PYTHON = $(VENV)/bin/python
 PIP = $(VENV)/bin/pip
 UVICORN = $(VENV)/bin/uvicorn
@@ -24,10 +25,10 @@ install: $(VENV)/bin/activate
 	$(PIP) install -r requirements.txt
 
 dev: $(VENV)/bin/activate
-	$(PIP) install -r requirements-dev.txt
+	$(PIP) install -e .[dev]
 
 $(VENV)/bin/activate:
-	python -m venv $(VENV)
+	$(SYSTEM_PYTHON) -m venv $(VENV)
 
 run:
 	$(UVICORN) pookie_backend.main:app --reload
