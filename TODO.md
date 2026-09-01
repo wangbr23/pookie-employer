@@ -21,25 +21,29 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [x] `T6` Add backend configuration and database connection layer — agent, depends-on: T3, T4, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI loads typed settings from environment, validates required config at startup/test time, connects to Postgres through SQLAlchemy, and tests cover config/database initialization without leaking secrets.
-- [ ] `T7` Add Alembic and initial domain schema migration — agent, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
-  - Done when: SQLAlchemy models and one Alembic migration cover profile, job sources, crawl/source runs, raw postings, jobs, links, evaluations, and feedback with explicit enums for domain states; migration applies cleanly on a fresh database.
-- [ ] `T8` Seed one profile and initial approved source list — agent, depends-on: T7, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T7` Add Alembic migration framework only — agent, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
+  - Done when: backend has Alembic installed/configured, migration commands documented, Alembic imports backend settings/database metadata, and an empty/no-op migration workflow can run without defining domain tables yet.
+- [ ] `T36` Add core profile/source/crawl schema migration — agent, depends-on: T7, design: docs/designs/2026-08-31-pookie-employer.md
+  - Done when: SQLAlchemy models and one Alembic migration cover user profile, job sources, crawl runs, source runs, and raw job postings with explicit enums and indexes needed for ingestion; migration applies cleanly on a fresh database.
+- [ ] `T37` Add job recommendation and feedback schema migration — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
+  - Done when: SQLAlchemy models and one Alembic migration cover canonical jobs, job links, job evaluations, and job feedback with explicit enums for job status, link status, fit buckets, uncertainty, and feedback actions; migration applies cleanly after `T36`.
+- [ ] `T8` Seed one profile and initial approved source list — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a documented seed command that creates one admin-configured profile and a small approved source list without duplicating rows on repeated runs.
 
 ## Backend API and security boundary
 
 - [ ] `T9` Add backend auth/CORS/request-id foundation — agent, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI rejects unauthenticated protected routes, supports the chosen MVP auth pattern via environment config, restricts CORS to configured origins, attaches request IDs to responses/logs, and tests cover allowed/blocked access.
-- [ ] `T10` Add read-only jobs and coverage API contracts with placeholder data — agent, depends-on: T7, T9, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T10` Add read-only jobs and coverage API contracts with placeholder data — agent, depends-on: T37, T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI exposes documented OpenAPI endpoints for job list, job detail, and debug coverage using database-backed or seeded placeholder data, with Pydantic response schemas matching the design.
-- [ ] `T11` Add job feedback API endpoints only — agent, depends-on: T7, T9, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T11` Add job feedback API endpoints only — agent, depends-on: T37, T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: save, dismiss, and seen endpoints update job state/feedback with validation and authorization, tests cover valid and invalid transitions, and no frontend UI is changed.
 - [ ] `T12` Add protected on-demand refresh/rank trigger API stubs only — agent, depends-on: T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: protected backend endpoints/CLI entrypoints exist for on-demand refresh, refresh status/result, and rerank; they create or report stub run records safely; daily scheduling, real source adapters, and AI ranking are not implemented in this task.
 
 ## Ingestion pipeline
 
-- [ ] `T13` Implement raw posting persistence and crawl run recording helpers — agent, depends-on: T7, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T13` Implement raw posting persistence and crawl run recording helpers — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend services can create crawl/source runs, upsert raw postings by source/content identity, record counts/errors, and tests cover partial source success/failure bookkeeping.
 - [ ] `T14` Implement Greenhouse source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: allowlisted Greenhouse sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
@@ -56,7 +60,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: raw postings can be normalized into job candidates with title/company/location/apply link checks, missing salary/remote uncertainty is represented, and tests cover accepted/rejected/Needs Review cases.
 - [ ] `T19` Implement conservative dedupe and job/link upsert — agent, depends-on: T18, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: normalized candidates upsert canonical jobs and job links, obvious duplicates merge while preserving links, uncertain duplicates remain separate, and tests cover repeated crawl idempotency.
-- [ ] `T20` Add AI provider interface and consent/cost metadata model — agent, depends-on: T7, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T20` Add AI provider interface and consent/cost metadata model — agent, depends-on: T37, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a typed AI service interface, profile-level third-party AI consent/provider fields or equivalent storage, AI call metadata/cost recording primitives, and tests prove AI calls are blocked without consent.
 - [ ] `T21` Implement job evaluation pipeline with a mock AI provider — agent, depends-on: T19, T20, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend can evaluate jobs into fit buckets, summaries, concerns, uncertainty fields, and internal scores using a deterministic mock provider; dashboard APIs read stored evaluations; no real AI provider is required.
@@ -84,7 +88,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [ ] `T30` Add export saved jobs endpoint and UI affordance — agent, depends-on: T9, T27, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: authenticated user can export saved jobs as CSV or JSON, export includes apply links and fit summaries, and tests cover authorization.
-- [ ] `T31` Add destructive data deletion endpoints only — agent, depends-on: T9, T7, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T31` Add destructive data deletion endpoints only — agent, depends-on: T9, T37, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend supports protected deletion of profile-derived data and job feedback/history with tests; frontend UI is not included in this task.
 - [ ] `T32` Add frontend data deletion controls — agent, depends-on: T31, T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend exposes clearly labeled deletion controls with confirmation, calls backend deletion endpoints, and handles success/error states.

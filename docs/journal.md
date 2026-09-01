@@ -41,3 +41,7 @@ Completed `T6`: added typed FastAPI settings loaded from environment, SQLAlchemy
 ## 2026-08-31 — on-demand refresh and deployment plan update
 
 Updated the design and tasks to make on-demand refresh the first-milestone behavior, with daily scheduling deferred. Added a 90-second refresh budget strategy using bounded source concurrency, per-source and total timeouts, unchanged-job skipping, AI evaluation caps, partial results, and refresh status. Added deployment guidance: keep the monorepo, deploy the Next.js frontend from `frontend/`, deploy the FastAPI backend from `backend/`, and use managed PostgreSQL for durable production storage instead of local Docker Postgres.
+
+## 2026-08-31 — T7 schema work split
+
+Split the original broad `T7` schema task into smaller reviewable chunks: Alembic framework setup (`T7`), core profile/source/crawl schema (`T36`), and job recommendation/feedback schema (`T37`). Updated downstream task dependencies to depend on the specific schema layer they need.
