@@ -1,0 +1,34 @@
+# Local PostgreSQL development environment for Pookie Employer backend.
+# Start with: docker-compose up -d postgres
+# Stop with: docker-compose down
+# Remove volumes: docker-compose down -v
+#
+# The backend service will connect via DATABASE_URL environment variable.
+# See .env.example for the template.
+#
+# **Note:** The default credentials (postgres:postgres) are suitable only for local development.
+# For any environment resembling production, change the password and consider using secrets.
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pookie-employer-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pookie_employer_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: –10s
+      timeout: –5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
