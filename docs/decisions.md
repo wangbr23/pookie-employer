@@ -61,3 +61,13 @@ Append-only log of architecture decisions. One entry per decision, newest at the
 **Decision:** Supersede the earlier single Next.js/PostgreSQL architecture. The MVP will use a Next.js/TypeScript frontend for the dashboard and a dedicated Python FastAPI backend for APIs, ingestion, normalization, deduplication, AI ranking, cron/CLI jobs, and source observability. PostgreSQL remains the shared persistence layer, managed through SQLAlchemy 2.x and Alembic on the backend. See `docs/designs/2026-08-31-pookie-employer.md` for the revised design.
 
 **Consequences:** The implementation has two services from the start, which adds setup overhead but creates a clearer boundary for the product's long-running backend work and AI tooling. `AGENTS.md` now records separate frontend/backend stack expectations; exact commands remain TBD until scaffolding.
+
+## 2026-08-31 — Backend owns domain data and AI pipeline boundaries
+
+**Status:** Accepted
+
+**Context:** Splitting the frontend and backend improves fit for ingestion/ranking work, but it introduces cross-service auth, API contract, data ownership, and deployment risks.
+
+**Decision:** The FastAPI backend is the sole owner of domain database writes, SQLAlchemy/Alembic migrations, ingestion/ranking execution, AI provider integration, API authorization, and sensitive domain logic. The Next.js frontend owns presentation and user interaction only, calling documented backend REST APIs. FastAPI OpenAPI is the API contract source. See `docs/designs/2026-08-31-pookie-employer.md` for the boundary matrix.
+
+**Consequences:** Implementation tasks should avoid direct frontend database access and duplicated business rules. Auth/CORS/API-contract setup becomes an early foundation task before dashboard and backend work proceed in parallel.

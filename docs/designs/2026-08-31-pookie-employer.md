@@ -129,6 +129,38 @@ The application has two deployable services and five logical layers:
    - Does not generate application materials.
    - Logs AI request metadata/cost estimate where possible, but not full sensitive prompts unless explicitly needed for debugging.
 
+### Cross-service boundaries
+
+The frontend/backend split is justified because ingestion, crawling, parsing, ranking, and AI evaluation are the MVP's product engine and benefit from Python's ecosystem. To avoid turning this into unnecessary microservice complexity, keep the boundary strict and boring:
+
+| Concern | Owner | Notes |
+| --- | --- | --- |
+| Dashboard pages, layout, client interactions | Next.js frontend | No direct database writes. No crawler/ranker logic. |
+| User session/login UI | Next.js frontend | May use a hosted auth provider or Auth.js-compatible flow. |
+| API authorization decisions | FastAPI backend | Backend must enforce access even if frontend hides UI. |
+| Job/source/profile/feedback database writes | FastAPI backend | Backend is the only service that writes domain data. |
+| Database schema/migrations | FastAPI backend | SQLAlchemy/Alembic is the source of truth. Frontend consumes API contracts. |
+| Crawl/rank execution | FastAPI backend | Triggered by scheduler, CLI, or authenticated backend endpoint. |
+| AI provider integration | FastAPI backend | Consent, prompt construction, output parsing, cost metadata, and redaction live here. |
+| Static UI styling/mock implementation | Next.js frontend | Tailwind components should follow the mock's tone. |
+
+Frontend-to-backend communication should use documented REST endpoints. FastAPI's generated OpenAPI schema is the contract source; generate or hand-maintain a small TypeScript API client/types from that schema once endpoint shapes stabilize. Do not duplicate business rules in TypeScript beyond presentation-friendly enum labels and form validation.
+
+For MVP authentication, use one of these simple patterns during implementation:
+
+1. **Shared auth provider/JWT:** frontend obtains a session token, backend verifies it and restricts access to one allowed user/email; or
+2. **Frontend proxy with backend API secret:** frontend server routes call the backend using a server-only API key, while the frontend still authenticates the user before proxying.
+
+Prefer the shared JWT approach if the chosen auth provider makes backend verification straightforward. Use the proxy/API-secret approach only if it significantly reduces setup for the personal MVP. In both cases, backend cron/admin/destructive endpoints require explicit protection and must not rely on obscurity.
+
+Operational conventions across services:
+
+- Use consistent request IDs in frontend server calls and backend logs so crawl/action failures can be traced.
+- Return structured backend errors with safe public messages; log sensitive details only on the backend and redact profile/prompt data.
+- Keep CORS narrow: only the deployed frontend origin and local dev origin may call the backend.
+- Backend owns database transactions; frontend treats backend responses as authoritative.
+- Breaking API changes should be landed with matching frontend changes in the same reviewable task unless hidden behind backward-compatible fields.
+
 ### First milestone build shape
 
 The first milestone should not wait for polished onboarding. It should include:
@@ -446,6 +478,10 @@ The first evaluator may over/under-rank jobs or misread unclear requirements. Mi
 
 Resume-derived profile information may leak through application logs or provider calls. Mitigation: do not log full prompts/responses by default; store structured outputs; require explicit consent for third-party AI; keep profile fields minimal.
 
+### Cross-service auth or API drift may create security and maintenance bugs
+
+A split frontend/backend architecture adds another boundary where auth assumptions, CORS, API schemas, and error handling can drift. Mitigation: backend enforces authorization for every sensitive action, FastAPI OpenAPI is the API contract source, CORS is allowlisted, and breaking API changes land with matching frontend changes.
+
 ### Backend job execution may outgrow simple cron/CLI
 
 A protected FastAPI endpoint or CLI job is simple, but long crawls may time out or become hard to parallelize as sources grow. Mitigation: acceptable for first milestone; record crawl duration/source counts, add warnings when runs approach platform timeout limits, and split into a real queue-backed worker only when measured crawl duration demands it.
@@ -503,6 +539,9 @@ Fit buckets and job states help, but dedupe uncertainty and Needs Review jobs ca
 
 ### Integration checks
 
+- Frontend can fetch dashboard jobs from FastAPI using the chosen auth pattern; unauthenticated requests are rejected.
+- Backend CORS allows only local/dev and deployed frontend origins.
+- FastAPI OpenAPI schema covers job list/detail, feedback, crawl trigger, debug coverage, export, and deletion endpoints.
 - Seed profile + source list can run a crawl and create `CrawlRun`, `SourceRun`, `RawJobPosting`, `Job`, and `JobLink` records.
 - Re-running the same crawl updates `lastSeenAt` and does not create duplicate visible jobs.
 - AI evaluation creates stored `JobEvaluation` rows and dashboard reads cached evaluations without live AI calls.

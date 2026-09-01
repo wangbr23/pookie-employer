@@ -1,2 +1,39 @@
 .pi/settings.local.json
 .claude/settings.local.json
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+.next/
+out/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python / backend
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+htmlcov/
+*.egg-info/
+
+# Local databases / caches
+*.sqlite
+*.sqlite3
+.cache/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

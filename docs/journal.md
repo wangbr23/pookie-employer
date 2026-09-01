@@ -17,3 +17,11 @@ Drafted and reviewed the implementation design at `docs/designs/2026-08-31-pooki
 ## 2026-08-31 — design revised for FastAPI backend
 
 After user feedback, revised the design away from a single Next.js server-side architecture. The design now uses a Next.js/TypeScript dashboard frontend plus a dedicated Python FastAPI backend for ingestion, ranking, AI integration, cron/CLI jobs, and APIs. Updated `AGENTS.md` and `docs/decisions.md` accordingly.
+
+## 2026-08-31 — cross-service boundary patch
+
+Patched `docs/designs/2026-08-31-pookie-employer.md` after an additional DeepSeek R1 review. Added explicit frontend/backend ownership, API contract, auth options, CORS, logging/error, migration, and API drift guidance. Recorded the backend data/API ownership decision in `docs/decisions.md`.
+
+## 2026-08-31 — T1 repo structure scaffolded
+
+Completed `T1`: added `frontend/` and `backend/` directories with responsibility READMEs, added root `README.md` explaining the two-service layout, and expanded `.gitignore` for common Node, Python, environment, cache, OS, and editor artifacts. No product behavior was implemented.
