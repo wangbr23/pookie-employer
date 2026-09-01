@@ -45,3 +45,7 @@ Updated the design and tasks to make on-demand refresh the first-milestone behav
 ## 2026-08-31 — T7 schema work split
 
 Split the original broad `T7` schema task into smaller reviewable chunks: Alembic framework setup (`T7`), core profile/source/crawl schema (`T36`), and job recommendation/feedback schema (`T37`). Updated downstream task dependencies to depend on the specific schema layer they need.
+
+## 2026-09-01 — T7 merged
+
+Reviewed and merged the Alembic migration framework. Backend checks passed: 10 tests, Ruff, and mypy. The T7 worktree was cleaned up after merge.

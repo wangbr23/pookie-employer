@@ -21,7 +21,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [x] `T6` Add backend configuration and database connection layer — agent, depends-on: T3, T4, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI loads typed settings from environment, validates required config at startup/test time, connects to Postgres through SQLAlchemy, and tests cover config/database initialization without leaking secrets.
-- [ ] `T7` Add Alembic migration framework only — agent, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T7` Add Alembic migration framework only — agent, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has Alembic installed/configured, migration commands documented, Alembic imports backend settings/database metadata, and an empty/no-op migration workflow can run without defining domain tables yet.
 - [ ] `T36` Add core profile/source/crawl schema migration — agent, depends-on: T7, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: SQLAlchemy models and one Alembic migration cover user profile, job sources, crawl runs, source runs, and raw job postings with explicit enums and indexes needed for ingestion; migration applies cleanly on a fresh database.
