@@ -17,7 +17,7 @@ def test_alembic_config_imports_settings_and_metadata():
     # Test that we can import our settings
     settings = get_settings()
     assert settings is not None
-    assert hasattr(settings, 'database_url')
+    assert hasattr(settings, "database_url")
 
     # Test that we can access our Base metadata
     assert Base.metadata is not None
@@ -41,6 +41,26 @@ def test_alembic_env_configuration():
     script_dir = ScriptDirectory.from_config(config)
     assert script_dir is not None
 
+    versions_dir = backend_dir / "alembic" / "versions"
+    assert versions_dir.is_dir()
+    assert script_dir.get_heads() == ["0002_core_ingestion_schema"]
+
+
+def test_alembic_heads_command_runs_without_database():
+    """The empty revision graph can be inspected without a database connection."""
+    backend_dir = Path(__file__).parent.parent
+
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "heads"],
+        cwd=backend_dir,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": str(backend_dir / "src")},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "0002_core_ingestion_schema (head)" in result.stdout
+
 
 def test_alembic_current_command():
     """Test that alembic current command runs without errors."""
@@ -52,18 +72,17 @@ def test_alembic_current_command():
         cwd=backend_dir,
         capture_output=True,
         text=True,
-        env={**os.environ, "PYTHONPATH": str(backend_dir / "src")}
+        env={**os.environ, "PYTHONPATH": str(backend_dir / "src")},
     )
 
     # Should either succeed or fail with expected messages for a new setup
     # It's okay if it fails due to database connection issues in test environments
     # What matters is that it loads our configuration correctly
     expected_messages = [
-        "no revision files",
-        "path doesn't exist",
         "connection refused",
         "could not connect",
-        "connection failed"
+        "connection failed",
+        "operation not permitted",
     ]
 
     # Success is acceptable

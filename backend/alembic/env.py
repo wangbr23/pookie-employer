@@ -1,7 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -9,6 +8,7 @@ from alembic import context
 # We need to handle the case where environment variables might not be set
 try:
     from pookie_backend.config import get_settings
+
     settings = get_settings()
     database_url = settings.database_url
 except Exception:
@@ -16,6 +16,7 @@ except Exception:
     # This allows alembic to parse the configuration even without env vars
     database_url = "postgresql+psycopg://dummy"
 
+from pookie_backend import models  # noqa: F401  # Register model metadata for Alembic.
 from pookie_backend.database import Base
 
 # this is the Alembic Config object, which provides
@@ -78,9 +79,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

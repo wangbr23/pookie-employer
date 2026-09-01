@@ -49,3 +49,15 @@ Split the original broad `T7` schema task into smaller reviewable chunks: Alembi
 ## 2026-09-01 — T7 merged
 
 Reviewed and merged the Alembic migration framework. Backend checks passed: 10 tests, Ruff, and mypy. The T7 worktree was cleaned up after merge.
+
+## 2026-09-01 — T7 migration workflow completed
+
+Follow-up verification found that T7 was marked complete without a tracked `alembic/versions/` directory, and its current-command test accepted missing-path errors. Added the versions directory with a no-op `0001_bootstrap` revision and tests that verify the revision graph via `alembic heads`. Domain schema revisions remain deferred to T36/T37.
+
+## 2026-09-01 — T36 schema implementation in progress
+
+Added SQLAlchemy models and the `0002_core_ingestion_schema` Alembic revision for user profiles, job sources, crawl runs, source runs, and raw job postings, including explicit status enums, foreign keys, uniqueness constraints, and ingestion indexes. Static checks pass; runtime tests and fresh-database migration validation remain pending because the local backend virtual environment lacks Alembic and its dependency installation is currently hanging.
+
+## 2026-09-01 — T36 completed
+
+Finished T36 after repairing validation in an isolated Python 3.13 environment. All 15 backend tests, Ruff, and mypy pass; Alembic reports `0002_core_ingestion_schema` as the head; offline upgrade SQL generates successfully with all six enum types emitted once. A live fresh-PostgreSQL upgrade could not be run because no local PostgreSQL server is available.
