@@ -139,6 +139,14 @@ class FeedbackAction(StrEnum):
     AI_WRONG = "ai_wrong"
 
 
+class AiCallStatus(StrEnum):
+    """Outcome of an AI provider call attempt."""
+
+    ATTEMPTED = "attempted"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 def enum_type(enum_class: type[StrEnum]) -> Enum:
     """Build a native PostgreSQL enum that persists the StrEnum values."""
     return Enum(
@@ -177,6 +185,12 @@ class UserProfile(Base):
     dealbreakers: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     notes: Mapped[str | None] = mapped_column(Text)
     profile_version: Mapped[int] = mapped_column(Integer, default=1)
+    ai_consent_given: Mapped[bool] = mapped_column(default=False, nullable=False)
+    ai_consent_provider: Mapped[str | None] = mapped_column(String(128))
+    ai_consent_model_family: Mapped[str | None] = mapped_column(String(128))
+    ai_consent_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -186,6 +200,43 @@ class UserProfile(Base):
 
     evaluations: Mapped[list["JobEvaluation"]] = relationship(back_populates="profile")
     feedback: Mapped[list["JobFeedback"]] = relationship(back_populates="profile")
+    ai_call_logs: Mapped[list["AiCallLog"]] = relationship(
+        back_populates="profile", cascade="all, delete-orphan"
+    )
+
+
+class AiCallLog(Base):
+    """Minimal structured metadata for one AI provider call attempt."""
+
+    __tablename__ = "ai_call_logs"
+    __table_args__ = (
+        Index("ix_ai_call_logs_profile_created", "profile_id", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    profile_id: Mapped[UUID] = mapped_column(
+        ForeignKey("user_profiles.id", ondelete="CASCADE"), nullable=False
+    )
+    provider: Mapped[str] = mapped_column(String(128), nullable=False)
+    model_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    operation: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[AiCallStatus] = mapped_column(
+        enum_type(AiCallStatus), nullable=False
+    )
+    call_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    input_tokens: Mapped[int | None] = mapped_column(Integer)
+    output_tokens: Mapped[int | None] = mapped_column(Integer)
+    estimated_cost: Mapped[Decimal | None] = mapped_column(Numeric(12, 6))
+    crawl_run_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("crawl_runs.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    profile: Mapped[UserProfile] = relationship(back_populates="ai_call_logs")
 
 
 class JobSource(Base):

@@ -2,6 +2,8 @@
 
 from pookie_backend.database import Base
 from pookie_backend.models import (
+    AiCallLog,
+    AiCallStatus,
     ApprovalStatus,
     CrawlRun,
     CrawlStatus,
@@ -38,6 +40,7 @@ def test_core_tables_are_registered_with_metadata():
         "job_links",
         "job_evaluations",
         "job_feedback",
+        "ai_call_logs",
     }
 
 
@@ -144,3 +147,13 @@ def test_recommendation_tables_have_expected_relationship_keys():
     assert JobEvaluation.__table__.c.profile_id.foreign_keys
     assert JobFeedback.__table__.c.profile_id.foreign_keys
     assert Job.__table__.c.id.primary_key
+
+
+def test_ai_consent_and_call_metadata_are_registered():
+    assert UserProfile.__table__.c.ai_consent_given.default is not None
+    assert AiCallLog.__table__.c.profile_id.foreign_keys
+    assert {member.value for member in AiCallStatus} == {
+        "attempted",
+        "succeeded",
+        "failed",
+    }
