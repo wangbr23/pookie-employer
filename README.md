@@ -13,7 +13,7 @@ The frontend must not write directly to the database or implement crawler/ranker
 
 ## Current state
 
-Only project structure and planning documents exist. No frontend or backend application code has been scaffolded yet.
+The frontend and backend scaffolds exist. Product behavior has not been implemented yet.
 
 ## Local PostgreSQL development environment
 
@@ -47,9 +47,32 @@ cp .env.example .env
 
 ## Development notes
 
-Exact install, run, test, lint/typecheck, and build commands are TBD until the service scaffolds land.
+### Frontend
 
-Expected future shape:
+```bash
+cd frontend
+npm install
+npm run dev
+npm run lint
+npm run typecheck
+npm run build
+```
+
+Frontend tests are not configured yet.
+
+### Backend
+
+```bash
+cd backend
+make dev
+make run
+make test
+make lint
+make typecheck
+make format
+```
+
+### Repository shape
 
 ```text
 frontend/   # Next.js dashboard app

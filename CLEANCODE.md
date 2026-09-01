@@ -23,12 +23,16 @@ Project-specific coding standards for agents and humans. Keep this practical and
 - Put reusable logic in the project's established `lib`/`utils`/service layer once reuse is real.
 - Keep code close to where it is used until it has a reason to move.
 - Prefer explicit names that describe domain intent over generic names like `data`, `item`, or `helper`.
+- Keep the service boundary explicit: `frontend/` owns presentation and user interaction; `backend/` owns APIs, database writes, ingestion, ranking, and AI integration.
+- Do not duplicate backend business rules in the frontend beyond presentation labels and lightweight form validation.
 
 ## Type safety
 
 - Avoid `any`, broad casts, non-null assertions, and ignored type errors unless there is a documented reason.
 - Model domain states explicitly instead of relying on loose objects or sentinel values.
 - Validate external input at boundaries.
+- Use TypeScript types for frontend API responses and Pydantic schemas for FastAPI request/response boundaries.
+- Keep FastAPI OpenAPI output as the source of truth for backend API contracts once endpoint shapes exist.
 
 ## Error handling
 
@@ -42,6 +46,8 @@ Project-specific coding standards for agents and humans. Keep this practical and
 - Add or update tests for behavior changes when the project has a test setup.
 - Prefer behavior-focused tests over brittle implementation tests.
 - If tests cannot be run or do not exist yet, say so in the final report.
+- Backend behavior changes should normally include pytest coverage.
+- Frontend automated tests are not configured yet; until they are, run lint/typecheck/build for frontend changes and manually describe UI verification.
 
 ## Stop conditions
 

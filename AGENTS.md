@@ -12,19 +12,27 @@ AI job finder for my software engineer girlfriend to help her find jobs that sui
 - Database/ORM: PostgreSQL with SQLAlchemy 2.x and Alembic
 
 ## Commands
-- Install: TBD after repo scaffold; expected `npm install` for frontend and Python environment install for backend
-- Dev/run: TBD; expected separate frontend and backend dev commands
-- Test: TBD; expected frontend tests plus backend `pytest`
-- Lint/typecheck: TBD; expected frontend lint/typecheck plus backend lint/typecheck
-- Build: TBD
+- Install frontend: `cd frontend && npm install`
+- Install backend: `cd backend && make dev`
+- Dev/run frontend: `cd frontend && npm run dev`
+- Dev/run backend: `cd backend && make run`
+- Test frontend: not configured yet
+- Test backend: `cd backend && make test`
+- Lint frontend: `cd frontend && npm run lint`
+- Typecheck frontend: `cd frontend && npm run typecheck`
+- Lint backend: `cd backend && make lint`
+- Typecheck backend: `cd backend && make typecheck`
+- Format backend: `cd backend && make format`
+- Build frontend: `cd frontend && npm run build`
+- Build backend: not applicable yet
 
 ## Conventions
 Cross-project coding principles (KISS, no god files, surface conflicts, etc.) live in your global agent instructions — don't restate them here. Project coding conventions live in `CLEANCODE.md`; keep detailed code-quality rules there so this file stays focused on project context.
 
 This section is only for what's specific to *this* repo:
-- Code style: TBD
-- Testing approach: TBD
-- Commit message format: TBD
+- Code style: keep frontend-only code under `frontend/`; keep backend/API/ingestion/ranking/database code under `backend/`; do not give the frontend direct database access.
+- Testing approach: frontend tests are not configured yet; backend uses pytest. Add tests with backend behavior changes when practical.
+- Commit message format: short imperative subject, optionally prefixed with the task id, e.g. `T6 add backend settings`.
 
 ## Architecture
 (Placeholder — fill in once the system has real shape. High-level modules/services and how they talk to each other. Update this when the shape changes, not on every commit.)

@@ -14,7 +14,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: `backend/` contains a Python 3.12+ FastAPI app with dependency management, `/health` route, pytest setup, lint/typecheck tooling, and backend install/dev/test commands documented.
 - [x] `T4` Add local PostgreSQL development environment — agent, depends-on: T1, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: local Postgres can be started with a documented command, connection env vars are templated without secrets, and neither frontend nor backend contains hardcoded credentials.
-- [ ] `T5` Update project commands and conventions after scaffolding — agent, depends-on: T2, T3, T4, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T5` Update project commands and conventions after scaffolding — agent, depends-on: T2, T3, T4, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: `AGENTS.md` lists actual install/dev/test/lint/typecheck/build commands for frontend and backend, and `CLEANCODE.md` has any concrete repo-specific conventions discovered during scaffolding.
 
 ## Backend data foundation

@@ -29,3 +29,7 @@ Completed `T1`: added `frontend/` and `backend/` directories with responsibility
 ## 2026-08-31 — T2-T4 merged
 
 Merged reviewed scaffold branches for `T2`, `T3`, and `T4` into `main`: Next.js/Tailwind frontend scaffold, FastAPI backend scaffold with health/test/tooling setup, and local PostgreSQL Docker Compose/env documentation. Marked all three tasks complete in `TODO.md`.
+
+## 2026-08-31 — T5 commands and conventions updated
+
+Completed `T5`: updated `AGENTS.md` with concrete frontend/backend install, dev, lint/typecheck, test, format, and build commands from the scaffolds. Added repo-specific service-boundary, API-contract, and testing conventions to `CLEANCODE.md`. Updated root `README.md` development notes to match the current scaffold state.
