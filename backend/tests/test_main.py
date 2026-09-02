@@ -88,3 +88,29 @@ def test_request_id_rejects_unsafe_client_value(client):
 
     assert response.headers["x-request-id"] != "bad\r\nX-Injected: evil"
     assert "x-injected" not in response.headers
+
+
+def test_unhandled_exception_fallback_response_still_gets_cors_headers(client):
+    """The request-id middleware's manual 500 fallback must still pass through
+    CORSMiddleware, or the browser blocks a cross-origin error as a CORS
+    failure instead of surfacing the real 500 to the frontend."""
+    from pookie_backend.main import app
+    from pookie_backend.security import require_api_secret
+
+    def boom() -> None:
+        raise RuntimeError("boom")
+
+    app.dependency_overrides[require_api_secret] = boom
+    try:
+        response = client.get(
+            "/api/protected",
+            headers={
+                "Authorization": "Bearer test-api-secret",
+                "Origin": "http://localhost:3000",
+            },
+        )
+    finally:
+        app.dependency_overrides.pop(require_api_secret, None)
+
+    assert response.status_code == 500
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"

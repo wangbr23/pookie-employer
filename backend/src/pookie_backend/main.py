@@ -20,13 +20,6 @@ app = FastAPI(
     description="Backend API and job-processing pipeline for Pookie Employer.",
     version="0.1.0",
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 @app.middleware("http")
@@ -70,6 +63,25 @@ async def add_request_id(
         return response
     finally:
         request_id_context.reset(token)
+
+
+# Registered after add_request_id so CORS ends up as the outermost middleware
+# (Starlette's add_middleware prepends, so the last one added wraps the rest).
+# That way CORS headers are applied to every response leaving the app,
+# including the request-id middleware's manually built 500 fallback, which
+# would otherwise bypass CORSMiddleware's ASGI send-wrapping entirely.
+# Tradeoff: CORSMiddleware answers preflight (OPTIONS) requests directly
+# without calling into add_request_id, so preflight responses don't get an
+# X-Request-ID header or a request-completed log line. Accepted: preflight
+# requests carry no app state to trace, and CORS headers on every real
+# response (including error fallbacks) matters more.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")

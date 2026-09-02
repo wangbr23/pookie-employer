@@ -50,3 +50,19 @@ def test_secret_key_is_redacted_in_repr() -> None:
     assert "super-sensitive-secret" not in repr(settings)
     assert "super-sensitive-api-secret" not in repr(settings)
     assert "**********" in repr(settings)
+
+
+def test_cors_allowed_origins_rejects_wildcard() -> None:
+    """A "*" origin combined with allow_credentials=True would open CORS to
+    any origin, so it must be rejected at settings load instead of silently
+    accepted."""
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/pookie_test",
+            SECRET_KEY="test-secret",
+            API_SECRET="test-api-secret",
+            PYTHON_ENV="test",
+            CORS_ALLOWED_ORIGINS="*",
+        )
+
+    assert "CORS_ALLOWED_ORIGINS" in str(exc_info.value)
