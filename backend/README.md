@@ -55,6 +55,8 @@ Required variables:
 
 - `DATABASE_URL` — SQLAlchemy database URL, e.g. `postgresql+psycopg://postgres:postgres@localhost:5432/pookie_employer_dev`
 - `SECRET_KEY` — secret value for future auth/session needs; use a strong local value and never commit it
+- `API_SECRET` — shared bearer token required by protected API routes; use a strong local value and never commit it
+- `CORS_ALLOWED_ORIGINS` — comma-separated frontend origins allowed to call the backend (defaults to local development origins)
 - `PYTHON_ENV` — `development`, `test`, or `production` (`development` by default)
 
 From the repo root, copy the template before running the backend:
@@ -77,7 +79,10 @@ The server will be available at `http://localhost:8000`.
 
 - Root endpoint: `GET /`
 - Health endpoint: `GET /health`
+- Protected route example: `GET /api/protected` with `Authorization: Bearer <API_SECRET>`
 - OpenAPI documentation: `GET /docs`
+
+Protected API routes use the shared `API_SECRET` bearer token. The backend also propagates a client-provided `X-Request-ID` or generates one, returning it on every response for tracing.
 
 ### Testing
 
