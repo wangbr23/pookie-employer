@@ -27,12 +27,12 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: SQLAlchemy models and one Alembic migration cover user profile, job sources, crawl runs, source runs, and raw job postings with explicit enums and indexes needed for ingestion; migration applies cleanly on a fresh database.
 - [x] `T37` Add job recommendation and feedback schema migration — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: SQLAlchemy models and one Alembic migration cover canonical jobs, job links, job evaluations, and job feedback with explicit enums for job status, link status, fit buckets, uncertainty, and feedback actions; migration applies cleanly after `T36`.
-- [ ] `T8` Seed one profile and initial approved source list — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T8` Seed one profile and initial approved source list — agent, complexity: simple, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a documented seed command that creates one admin-configured profile and a small approved source list without duplicating rows on repeated runs.
 
 ## Backend API and security boundary
 
-- [ ] `T9` Add backend auth/CORS/request-id foundation — agent, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T9` Add backend auth/CORS/request-id foundation — agent, complexity: complex, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI rejects unauthenticated protected routes, supports the chosen MVP auth pattern via environment config, restricts CORS to configured origins, attaches request IDs to responses/logs, and tests cover allowed/blocked access.
 - [ ] `T10` Add read-only jobs and coverage API contracts with placeholder data — agent, depends-on: T37, T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI exposes documented OpenAPI endpoints for job list, job detail, and debug coverage using database-backed or seeded placeholder data, with Pydantic response schemas matching the design.
@@ -43,7 +43,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 ## Ingestion pipeline
 
-- [ ] `T13` Implement raw posting persistence and crawl run recording helpers — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T13` Implement raw posting persistence and crawl run recording helpers — agent, complexity: complex, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend services can create crawl/source runs, upsert raw postings by source/content identity, record counts/errors, and tests cover partial source success/failure bookkeeping.
 - [ ] `T14` Implement Greenhouse source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: allowlisted Greenhouse sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
@@ -60,7 +60,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: raw postings can be normalized into job candidates with title/company/location/apply link checks, missing salary/remote uncertainty is represented, and tests cover accepted/rejected/Needs Review cases.
 - [ ] `T19` Implement conservative dedupe and job/link upsert — agent, depends-on: T18, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: normalized candidates upsert canonical jobs and job links, obvious duplicates merge while preserving links, uncertain duplicates remain separate, and tests cover repeated crawl idempotency.
-- [ ] `T20` Add AI provider interface and consent/cost metadata model — agent, depends-on: T37, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T20` Add AI provider interface and consent/cost metadata model — agent, complexity: complex, depends-on: T37, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a typed AI service interface, profile-level third-party AI consent/provider fields or equivalent storage, AI call metadata/cost recording primitives, and tests prove AI calls are blocked without consent.
 - [ ] `T21` Implement job evaluation pipeline with a mock AI provider — agent, depends-on: T19, T20, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend can evaluate jobs into fit buckets, summaries, concerns, uncertainty fields, and internal scores using a deterministic mock provider; dashboard APIs read stored evaluations; no real AI provider is required.
@@ -71,7 +71,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 ## Frontend dashboard
 
-- [ ] `T24` Build static dashboard shell from mock — agent, depends-on: T2, design: docs/designs/2026-08-31-pookie-employer.md
+- [ ] `T24` Build static dashboard shell from mock — agent, complexity: simple, depends-on: T2, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend has the warm sidebar/layout/card styling inspired by `docs/specs/mocks/mock.png`, uses static mock software-engineering job data, and includes no backend integration.
 - [ ] `T25` Add frontend API client and authenticated backend fetch setup — agent, depends-on: T10, T24, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend has a small typed API client based on the backend OpenAPI/contracts, handles auth/proxy configuration, and can fetch placeholder jobs from FastAPI in local dev.
