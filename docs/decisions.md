@@ -91,3 +91,13 @@ Append-only log of architecture decisions. One entry per decision, newest at the
 **Decision:** Keep the monorepo. Deploy the Next.js frontend from `frontend/` and the FastAPI backend from `backend/` as separate services. Use managed PostgreSQL for production durability. Vercel is preferred for the frontend; Railway or Render are acceptable for the backend and managed Postgres, with Railway likely simplest for early MVP. Local Docker Postgres remains development-only.
 
 **Consequences:** Production environment variables must point at managed services, not localhost. Deployment docs must cover frontend origin/CORS, backend URL/secrets, managed `DATABASE_URL`, AI keys when approved, and the on-demand refresh flow. Free/trial tiers may be used for development, but any ephemeral/free database must not be treated as durable production storage.
+
+## 2026-09-01 — Seed sources with application-level idempotency keys
+
+**Status:** Accepted
+
+**Context:** The initial seed command needs to be safe to rerun without creating duplicate profile or source rows, but the current schema does not define a unique constraint for `job_sources`.
+
+**Decision:** The seed command will use `owner_user_id` as the natural idempotency key for the profile and a lookup-before-insert pattern keyed on `(kind, company_name, external_board_id)` for each source. No new migration is added for this task.
+
+**Consequences:** Seeding remains simple and reversible while preserving repeated-run safety. If source identity rules change later, the seed logic will need to be updated in tandem with any future uniqueness constraint.

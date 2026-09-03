@@ -69,3 +69,7 @@ Added SQLAlchemy models and the `0003_recommendation_schema` migration for canon
 ## 2026-09-01 — T37 completed
 
 Validated T37 against a clean Homebrew PostgreSQL 15 database named `pookie_t37_verify`. Upgraded through `0003_recommendation_schema`, verified all expected tables and enum types, downgraded to `0002_core_ingestion_schema`, and upgraded again successfully. The full backend suite (17 tests), Ruff, and mypy pass.
+
+## 2026-09-01 — T8 seed command added
+
+Added `python -m pookie_backend.seed` and `make seed` to seed one admin-configured `UserProfile` plus five approved `JobSource` rows across Greenhouse, Lever, and Ashby. The seed logic is idempotent via lookup-before-insert on `owner_user_id` and a `(kind, company_name, external_board_id)` natural key for sources. Added pytest coverage for duplicate suppression and expected seeded shape. Local test/lint/typecheck commands could not be fully run in this workspace because the backend `venv/` and pytest/ruff/mypy binaries are absent.

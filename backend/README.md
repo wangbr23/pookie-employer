@@ -130,6 +130,7 @@ A `Makefile` is provided with common commands:
 - `make lint` – run lint checks
 - `make format` – format code
 - `make typecheck` – run mypy
+- `make seed` – seed the database with one admin-configured profile and the initial approved source list (safe to rerun)
 
 ### Database migrations with Alembic
 
