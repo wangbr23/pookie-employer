@@ -58,7 +58,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [x] `T18` Implement deterministic normalization and minimum-field validation — agent, depends-on: T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: raw postings can be normalized into job candidates with title/company/location/apply link checks, missing salary/remote uncertainty is represented, and tests cover accepted/rejected/Needs Review cases.
-- [ ] `T19` Implement conservative dedupe and job/link upsert — agent, depends-on: T18, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T19` Implement conservative dedupe and job/link upsert — agent, depends-on: T18, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: normalized candidates upsert canonical jobs and job links, obvious duplicates merge while preserving links, uncertain duplicates remain separate, and tests cover repeated crawl idempotency.
 - [x] `T20` Add AI provider interface and consent/cost metadata model — agent, complexity: complex, depends-on: T37, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a typed AI service interface, profile-level third-party AI consent/provider fields or equivalent storage, AI call metadata/cost recording primitives, and tests prove AI calls are blocked without consent.
