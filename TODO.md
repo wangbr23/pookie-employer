@@ -27,14 +27,14 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: SQLAlchemy models and one Alembic migration cover user profile, job sources, crawl runs, source runs, and raw job postings with explicit enums and indexes needed for ingestion; migration applies cleanly on a fresh database.
 - [x] `T37` Add job recommendation and feedback schema migration — agent, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: SQLAlchemy models and one Alembic migration cover canonical jobs, job links, job evaluations, and job feedback with explicit enums for job status, link status, fit buckets, uncertainty, and feedback actions; migration applies cleanly after `T36`.
-- [ ] `T8` Seed one profile and initial approved source list — agent, complexity: simple, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T8` Seed one profile and initial approved source list — agent, complexity: simple, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a documented seed command that creates one admin-configured profile and a small approved source list without duplicating rows on repeated runs.
 
 ## Backend API and security boundary
 
 - [x] `T9` Add backend auth/CORS/request-id foundation — agent, complexity: complex, depends-on: T6, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI rejects unauthenticated protected routes, supports the chosen MVP auth pattern via environment config, restricts CORS to configured origins, attaches request IDs to responses/logs, and tests cover allowed/blocked access.
-- [ ] `T10` Add read-only jobs and coverage API contracts with placeholder data — agent, depends-on: T37, T9, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T10` Add read-only jobs and coverage API contracts with placeholder data — agent, depends-on: T37, T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: FastAPI exposes documented OpenAPI endpoints for job list, job detail, and debug coverage using database-backed or seeded placeholder data, with Pydantic response schemas matching the design.
 - [ ] `T11` Add job feedback API endpoints only — agent, depends-on: T37, T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: save, dismiss, and seen endpoints update job state/feedback with validation and authorization, tests cover valid and invalid transitions, and no frontend UI is changed.
@@ -71,7 +71,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 ## Frontend dashboard
 
-- [ ] `T24` Build static dashboard shell from mock — agent, complexity: simple, depends-on: T2, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T24` Build static dashboard shell from mock — agent, complexity: simple, depends-on: T2, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend has the warm sidebar/layout/card styling inspired by `docs/specs/mocks/mock.png`, uses static mock software-engineering job data, and includes no backend integration.
 - [ ] `T25` Add frontend API client and authenticated backend fetch setup — agent, depends-on: T10, T24, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend has a small typed API client based on the backend OpenAPI/contracts, handles auth/proxy configuration, and can fetch placeholder jobs from FastAPI in local dev.
