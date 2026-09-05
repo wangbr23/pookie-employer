@@ -1,14 +1,11 @@
 """Integration tests for crawl and raw-posting persistence."""
 
-from collections.abc import Generator
 from datetime import UTC, datetime
 from uuid import uuid4
 
-import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from pookie_backend.database import engine
 from pookie_backend.ingestion import (
     RawPostingInput,
     create_crawl_run,
@@ -26,26 +23,6 @@ from pookie_backend.models import (
     SourceKind,
     SourceRunStatus,
 )
-
-
-@pytest.fixture
-def db_session() -> Generator[Session, None, None]:
-    """Run each integration test in a rolled-back transaction.
-
-    Uses the app's configured engine (DATABASE_URL, defaulted to the
-    `pookie_test` database by conftest.py) rather than a separate database,
-    so this suite follows the same test-database convention as the rest of
-    the backend tests.
-    """
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection, autoflush=False)
-    try:
-        yield session
-    finally:
-        session.close()
-        transaction.rollback()
-        connection.close()
 
 
 def add_source(session: Session, name: str) -> JobSource:
@@ -93,9 +70,7 @@ def test_raw_posting_upsert_is_idempotent_and_detects_changes(
     assert same_kind == "skipped"
     assert same_row.id == row.id
     assert same_row.last_seen_at == second_seen
-    assert db_session.scalar(
-        select(func.count()).select_from(RawJobPosting)
-    ) == 1
+    assert db_session.scalar(select(func.count()).select_from(RawJobPosting)) == 1
 
     changed_row, changed_kind = upsert_raw_posting(
         db_session,
@@ -114,15 +89,11 @@ def test_partial_source_failure_preserves_successful_postings(
     successful_source = add_source(db_session, "Successful source")
     failed_source = add_source(db_session, "Failed source")
     crawl_run = create_crawl_run(db_session, CrawlTrigger.MANUAL_SCRIPT)
-    successful_run = create_source_run(
-        db_session, crawl_run.id, successful_source.id
-    )
+    successful_run = create_source_run(db_session, crawl_run.id, successful_source.id)
     failed_run = create_source_run(db_session, crawl_run.id, failed_source.id)
 
     counts = persist_raw_postings(db_session, successful_run, [posting()])
-    finish_source_run(
-        db_session, successful_run, status=SourceRunStatus.SUCCESS
-    )
+    finish_source_run(db_session, successful_run, status=SourceRunStatus.SUCCESS)
     finish_source_run(
         db_session,
         failed_run,
@@ -138,6 +109,4 @@ def test_partial_source_failure_preserves_successful_postings(
     assert crawl_run.sources_succeeded == 1
     assert crawl_run.sources_failed == 1
     assert crawl_run.jobs_new == 1
-    assert db_session.scalar(
-        select(func.count()).select_from(RawJobPosting)
-    ) == 1
+    assert db_session.scalar(select(func.count()).select_from(RawJobPosting)) == 1

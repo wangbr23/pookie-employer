@@ -56,6 +56,10 @@ target-version = ['py312']
 [tool.isort]
 profile = "black"
 line_length = 88
+# Without this, isort treats the src-layout package as third party and drops the
+# blank line that `ruff check`'s import rule requires, so `make format` would
+# break `make lint`.
+known_first_party = ["pookie_backend"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

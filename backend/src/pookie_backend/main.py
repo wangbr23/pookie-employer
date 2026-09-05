@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse, Response
 
+from pookie_backend.api import coverage, jobs
 from pookie_backend.config import get_settings
 from pookie_backend.request_id import request_id_context, sanitize_client_request_id
 from pookie_backend.security import require_api_secret
@@ -107,5 +108,8 @@ async def protected() -> dict[str, str]:
     """Minimal protected route proving the API authorization boundary."""
     return {"status": "authorized"}
 
+
+protected_router.include_router(jobs.router)
+protected_router.include_router(coverage.router)
 
 app.include_router(protected_router)
