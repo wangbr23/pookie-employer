@@ -24,13 +24,51 @@ class AIProviderNotAllowedError(PermissionError):
 
 
 @dataclass(frozen=True)
+class AIJobSnapshot:
+    """The job facts an evaluator may see.
+
+    Deliberately narrow: this is the payload that leaves the process for a
+    hosted provider, so it carries no raw posting text and nothing that is not
+    needed to judge fit.
+    """
+
+    title: str
+    company: str
+    location: str | None
+    remote_policy: str | None
+    salary_unknown: bool
+
+
+@dataclass(frozen=True)
+class AIProfileSnapshot:
+    """The profile preferences an evaluator may see.
+
+    Carries stated preferences only - no employment history, work
+    authorization detail, or free-text notes.
+    """
+
+    target_role_families: tuple[str, ...]
+    preferred_tech: tuple[str, ...]
+    avoided_tech: tuple[str, ...]
+    dealbreakers: tuple[str, ...]
+    remote_preference: str | None
+    salary_floor: Decimal | None
+
+
+@dataclass(frozen=True)
 class AIJobEvaluationRequest:
-    """Stable identifiers and version data sent to an evaluation provider."""
+    """Everything a provider needs to evaluate one job for one profile.
+
+    The identifiers and versions key the stored result; the snapshots are what
+    the provider actually reads.
+    """
 
     profile_id: UUID
     job_id: UUID
     profile_version: int
     job_content_hash: str
+    job: AIJobSnapshot
+    profile: AIProfileSnapshot
 
 
 @dataclass(frozen=True)
@@ -41,6 +79,7 @@ class AIJobEvaluationResult:
     summary: str | None
     concerns: tuple[str, ...]
     matched_skills: tuple[str, ...]
+    matched_preferences: tuple[str, ...] = ()
     internal_score: Decimal | None = None
 
 
@@ -64,9 +103,7 @@ class NotImplementedAIProvider:
     provider_name = "unconfigured"
     model_name = "unconfigured"
 
-    def evaluate_job(
-        self, request: AIJobEvaluationRequest
-    ) -> AIJobEvaluationResult:
+    def evaluate_job(self, request: AIJobEvaluationRequest) -> AIJobEvaluationResult:
         raise NotImplementedError("No AI provider has been configured")
 
 
@@ -107,6 +144,8 @@ class AIService:
                 "Consent must include an allowed provider and model family"
             )
         if profile.ai_consent_provider != self.provider.provider_name:
-            raise AIProviderNotAllowedError("Provider is not allowed by profile consent")
+            raise AIProviderNotAllowedError(
+                "Provider is not allowed by profile consent"
+            )
         if not self.provider.model_name.startswith(profile.ai_consent_model_family):
             raise AIProviderNotAllowedError("Model is not allowed by profile consent")
