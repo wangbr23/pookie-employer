@@ -38,7 +38,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: FastAPI exposes documented OpenAPI endpoints for job list, job detail, and debug coverage using database-backed or seeded placeholder data, with Pydantic response schemas matching the design.
 - [x] `T11` Add job feedback API endpoints only — agent, depends-on: T37, T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: save, dismiss, and seen endpoints update job state/feedback with validation and authorization, tests cover valid and invalid transitions, and no frontend UI is changed.
-- [ ] `T12` Add protected on-demand refresh/rank trigger API stubs only — agent, depends-on: T9, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T12` Add protected on-demand refresh/rank trigger API stubs only — agent, depends-on: T9, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: protected backend endpoints/CLI entrypoints exist for on-demand refresh, refresh status/result, and rerank; they create or report stub run records safely; daily scheduling, real source adapters, and AI ranking are not implemented in this task.
 
 ## Ingestion pipeline
