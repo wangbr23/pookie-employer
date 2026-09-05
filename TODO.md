@@ -62,7 +62,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: normalized candidates upsert canonical jobs and job links, obvious duplicates merge while preserving links, uncertain duplicates remain separate, and tests cover repeated crawl idempotency.
 - [x] `T20` Add AI provider interface and consent/cost metadata model — agent, complexity: complex, depends-on: T37, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend has a typed AI service interface, profile-level third-party AI consent/provider fields or equivalent storage, AI call metadata/cost recording primitives, and tests prove AI calls are blocked without consent.
-- [ ] `T21` Implement job evaluation pipeline with a mock AI provider — agent, depends-on: T19, T20, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T21` Implement job evaluation pipeline with a mock AI provider — agent, depends-on: T19, T20, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend can evaluate jobs into fit buckets, summaries, concerns, uncertainty fields, and internal scores using a deterministic mock provider; dashboard APIs read stored evaluations; no real AI provider is required.
 - [ ] `T22` Integrate one real AI provider behind the backend interface — manual, depends-on: T20, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: provider choice, API key, allowed model family, consent posture, and monthly soft budget are approved and available locally without committing secrets.

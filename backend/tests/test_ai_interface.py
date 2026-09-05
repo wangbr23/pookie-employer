@@ -6,7 +6,12 @@ import pytest
 from sqlalchemy.orm import Session
 
 from pookie_backend.ai import AIConsentRequiredError, AIService
-from pookie_backend.ai.interface import AIJobEvaluationRequest, AIJobEvaluationResult
+from pookie_backend.ai.interface import (
+    AIJobEvaluationRequest,
+    AIJobEvaluationResult,
+    AIJobSnapshot,
+    AIProfileSnapshot,
+)
 from pookie_backend.models import UserProfile
 
 
@@ -24,7 +29,27 @@ class FakeProvider:
 
 
 def make_request() -> AIJobEvaluationRequest:
-    return AIJobEvaluationRequest(uuid4(), uuid4(), 1, "job-hash")
+    return AIJobEvaluationRequest(
+        profile_id=uuid4(),
+        job_id=uuid4(),
+        profile_version=1,
+        job_content_hash="job-hash",
+        job=AIJobSnapshot(
+            title="Senior Backend Engineer",
+            company="Astral",
+            location="Remote (US)",
+            remote_policy="remote",
+            salary_unknown=True,
+        ),
+        profile=AIProfileSnapshot(
+            target_role_families=(),
+            preferred_tech=("python",),
+            avoided_tech=(),
+            dealbreakers=(),
+            remote_preference=None,
+            salary_floor=None,
+        ),
+    )
 
 
 def test_ai_call_is_blocked_without_consent():
