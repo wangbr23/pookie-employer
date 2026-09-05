@@ -75,6 +75,19 @@ class SourceRunStatus(StrEnum):
     SKIPPED = "skipped"
 
 
+class RemotePolicy(StrEnum):
+    """Where a job is worked.
+
+    `Job.remote_policy` stores these as text rather than a native enum, so
+    changing this vocabulary needs no migration.
+    """
+
+    REMOTE = "remote"
+    HYBRID = "hybrid"
+    ONSITE = "onsite"
+    UNCLEAR = "unclear"
+
+
 class JobStatus(StrEnum):
     """Lifecycle state shown for a canonical job."""
 

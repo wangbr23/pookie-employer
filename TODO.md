@@ -56,7 +56,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 ## Normalization, dedupe, and ranking
 
-- [ ] `T18` Implement deterministic normalization and minimum-field validation — agent, depends-on: T13, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T18` Implement deterministic normalization and minimum-field validation — agent, depends-on: T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: raw postings can be normalized into job candidates with title/company/location/apply link checks, missing salary/remote uncertainty is represented, and tests cover accepted/rejected/Needs Review cases.
 - [ ] `T19` Implement conservative dedupe and job/link upsert — agent, depends-on: T18, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: normalized candidates upsert canonical jobs and job links, obvious duplicates merge while preserving links, uncertain duplicates remain separate, and tests cover repeated crawl idempotency.
