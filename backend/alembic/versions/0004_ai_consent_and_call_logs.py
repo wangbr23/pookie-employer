@@ -12,10 +12,10 @@ depends_on: str | None = None
 
 def upgrade() -> None:
     """Add explicit consent fields and minimal call observability."""
-    ai_call_status = sa.Enum(
-        "attempted", "succeeded", "failed", name="aicallstatus"
-    )
-    ai_call_status.create(op.get_bind(), checkfirst=True)
+    # create_table below emits CREATE TYPE for this enum, as revisions 0002 and
+    # 0003 rely on. Creating it here as well made that second emit fail on a
+    # fresh database with "type aicallstatus already exists".
+    ai_call_status = sa.Enum("attempted", "succeeded", "failed", name="aicallstatus")
     op.add_column(
         "user_profiles",
         sa.Column(

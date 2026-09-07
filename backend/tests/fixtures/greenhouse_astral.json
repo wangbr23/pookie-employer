@@ -1,0 +1,53 @@
+{
+  "jobs": [
+    {
+      "id": 4080029007,
+      "title": "Senior Software Engineer, Backend",
+      "absolute_url": "https://boards.greenhouse.io/astral/jobs/4080029007",
+      "location": {
+        "name": "New York, NY"
+      },
+      "content": "<p>We are looking for a Senior Software Engineer to join our backend team.</p><h3>Requirements</h3><ul><li>5+ years of experience</li><li>Python, Go, or Rust</li><li>Distributed systems</li></ul>",
+      "departments": [
+        {"id": 1, "name": "Engineering"}
+      ],
+      "offices": [
+        {"id": 1, "name": "New York", "location": "New York, NY"}
+      ],
+      "updated_at": "2026-08-15T18:00:00-04:00"
+    },
+    {
+      "id": 4080030008,
+      "title": "Software Engineer, Developer Tools",
+      "absolute_url": "https://boards.greenhouse.io/astral/jobs/4080030008",
+      "location": {
+        "name": "Remote (US)"
+      },
+      "content": "<p>Build and maintain developer tooling infrastructure.</p><h3>Requirements</h3><ul><li>3+ years of experience</li><li>Rust or Python</li></ul>",
+      "departments": [
+        {"id": 1, "name": "Engineering"}
+      ],
+      "offices": [],
+      "updated_at": "2026-08-20T10:30:00-04:00"
+    },
+    {
+      "id": 4080031009,
+      "title": "Product Manager",
+      "absolute_url": "https://boards.greenhouse.io/astral/jobs/4080031009",
+      "location": {
+        "name": "San Francisco, CA"
+      },
+      "content": "<p>Lead product strategy for our open source tooling.</p>",
+      "departments": [
+        {"id": 2, "name": "Product"}
+      ],
+      "offices": [
+        {"id": 2, "name": "San Francisco", "location": "San Francisco, CA"}
+      ],
+      "updated_at": "2026-08-22T14:00:00-04:00"
+    }
+  ],
+  "meta": {
+    "total": 3
+  }
+}
