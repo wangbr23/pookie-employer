@@ -51,7 +51,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: allowlisted Lever sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
 - [x] `T16` Implement Ashby source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: allowlisted Ashby sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
-- [ ] `T17` Wire bounded on-demand refresh orchestration across approved sources — agent, depends-on: T12, T14, T15, T16, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T17` Wire bounded on-demand refresh orchestration across approved sources — agent, depends-on: T12, T14, T15, T16, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: on-demand refresh invokes approved source adapters with bounded concurrency, per-source timeouts, and a total crawl budget; records aggregate/per-source counts, elapsed time, slow/failed sources, and partial success; tests cover mixed success/failure and timeout behavior.
 
 ## Normalization, dedupe, and ranking

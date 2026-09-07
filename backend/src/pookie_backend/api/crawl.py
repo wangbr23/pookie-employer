@@ -1,12 +1,5 @@
-"""Protected triggers for on-demand refresh and reranking.
+"""Protected triggers for on-demand refresh and reranking."""
 
-Stubs on purpose. The endpoints, their contracts, and their run bookkeeping
-are real, so the dashboard's Refresh action and status polling can be built
-against them, but nothing here fetches a source or calls a provider yet -
-source adapters and orchestration arrive with their own tasks.
-"""
-
-from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -17,15 +10,14 @@ from sqlalchemy.orm import Session, selectinload
 
 from pookie_backend.api.coverage import CrawlRunResponse
 from pookie_backend.database import get_db_session
-from pookie_backend.ingestion import create_crawl_run
 from pookie_backend.models import (
     CrawlRun,
     CrawlStatus,
-    CrawlTrigger,
     Job,
     JobStatus,
     SourceRun,
 )
+from pookie_backend.refresh import run_refresh
 
 # Jobs the user has closed out are not candidates for ranking.
 _UNRANKABLE_STATUSES = (JobStatus.DISMISSED, JobStatus.CLOSED_ARCHIVED)
@@ -45,18 +37,11 @@ class RankRunResponse(BaseModel):
 def trigger_crawl_run(
     session: Annotated[Session, Depends(get_db_session)],
 ) -> CrawlRunResponse:
-    """Open a crawl run and return it.
-
-    The run is finished immediately with zero counts because no source is
-    contacted yet: leaving it running would strand the coverage view on a
-    refresh that never completes.
-    """
+    """Run a bounded on-demand refresh across approved sources."""
     running = session.scalar(
         select(CrawlRun).where(CrawlRun.status == CrawlStatus.RUNNING)
     )
     if running is not None:
-        # Guards the double-clicked Refresh button, and still matters once
-        # orchestration makes a run take real time.
         raise HTTPException(
             status_code=409,
             detail={
@@ -65,11 +50,17 @@ def trigger_crawl_run(
             },
         )
 
-    crawl_run = create_crawl_run(session, CrawlTrigger.ON_DEMAND)
-    crawl_run.status = CrawlStatus.SUCCESS
-    crawl_run.finished_at = datetime.now(UTC)
-    crawl_run.elapsed_milliseconds = 0
-    session.flush()
+    refresh = run_refresh(session)
+    crawl_run = session.scalar(
+        select(CrawlRun)
+        .where(CrawlRun.id == refresh.crawl_run_id)
+        .options(selectinload(CrawlRun.source_runs).joinedload(SourceRun.job_source))
+    )
+    if crawl_run is None:
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "crawl_run_missing", "message": "Crawl run vanished."},
+        )
     return CrawlRunResponse.from_crawl_run(crawl_run)
 
 
