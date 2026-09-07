@@ -1,0 +1,50 @@
+[
+  {
+    "id": "abc123-def456-001",
+    "text": "Staff Software Engineer, Backend",
+    "hostedUrl": "https://jobs.lever.co/linear/abc123-def456-001",
+    "applyUrl": "https://jobs.lever.co/linear/abc123-def456-001/apply",
+    "categories": {
+      "commitment": "Full-time",
+      "department": "Engineering",
+      "location": "San Francisco, CA",
+      "team": "Backend"
+    },
+    "descriptionPlain": "We are looking for a Staff Software Engineer to work on our backend systems. You will design and implement core infrastructure powering Linear's product.\n\nRequirements:\n- 7+ years of experience in backend development\n- Strong experience with TypeScript and Node.js\n- Experience with distributed systems and databases",
+    "description": "<div><p>We are looking for a Staff Software Engineer to work on our backend systems.</p></div>",
+    "createdAt": 1724000000000,
+    "updatedAt": 1724500000000
+  },
+  {
+    "id": "abc123-def456-002",
+    "text": "Product Engineer",
+    "hostedUrl": "https://jobs.lever.co/linear/abc123-def456-002",
+    "applyUrl": "https://jobs.lever.co/linear/abc123-def456-002/apply",
+    "categories": {
+      "commitment": "Full-time",
+      "department": "Engineering",
+      "location": "Remote (US)",
+      "team": "Product"
+    },
+    "descriptionPlain": "Join our product engineering team to build features that delight users.\n\nRequirements:\n- 3+ years of experience\n- React and TypeScript",
+    "description": "<div><p>Join our product engineering team to build features that delight users.</p></div>",
+    "createdAt": 1724100000000,
+    "updatedAt": 1724600000000
+  },
+  {
+    "id": "abc123-def456-003",
+    "text": "Engineering Manager",
+    "hostedUrl": "https://jobs.lever.co/linear/abc123-def456-003",
+    "applyUrl": "https://jobs.lever.co/linear/abc123-def456-003/apply",
+    "categories": {
+      "commitment": "Full-time",
+      "department": "Engineering",
+      "location": "New York, NY",
+      "team": "Platform"
+    },
+    "descriptionPlain": "Lead and grow a team of engineers building Linear's core platform.",
+    "description": "<div><p>Lead and grow a team of engineers building Linear's core platform.</p></div>",
+    "createdAt": 1724200000000,
+    "updatedAt": 1724700000000
+  }
+]

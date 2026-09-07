@@ -45,9 +45,9 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [x] `T13` Implement raw posting persistence and crawl run recording helpers — agent, complexity: complex, depends-on: T36, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend services can create crawl/source runs, upsert raw postings by source/content identity, record counts/errors, and tests cover partial source success/failure bookkeeping.
-- [ ] `T14` Implement Greenhouse source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T14` Implement Greenhouse source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: allowlisted Greenhouse sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
-- [ ] `T15` Implement Lever source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T15` Implement Lever source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: allowlisted Lever sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
 - [x] `T16` Implement Ashby source adapter — agent, depends-on: T8, T13, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: allowlisted Ashby sources can be fetched into raw postings using fixture-backed tests, source errors are recorded, and no other ATS adapter is included.
