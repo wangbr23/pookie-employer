@@ -86,7 +86,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 ## Operations and data controls
 
-- [ ] `T30` Add export saved jobs endpoint and UI affordance — agent, depends-on: T9, T27, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T30` Add export saved jobs endpoint and UI affordance — agent, depends-on: T9, T27, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: authenticated user can export saved jobs as CSV or JSON, export includes apply links and fit summaries, and tests cover authorization.
 - [ ] `T31` Add destructive data deletion endpoints only — agent, depends-on: T9, T37, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend supports protected deletion of profile-derived data and job feedback/history with tests; frontend UI is not included in this task.

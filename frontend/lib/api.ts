@@ -132,6 +132,34 @@ export function triggerRank(): Promise<RankRunResponse> {
 }
 
 // ---------------------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------------------
+
+export async function exportSavedJobs(format: "csv" | "json" = "csv"): Promise<void> {
+  const res = await fetch(`/api/export/saved?format=${format}`);
+  if (!res.ok) {
+    let detail: ApiErrorDetail;
+    try {
+      const body = await res.json();
+      detail = body.detail ?? { code: "unknown", message: res.statusText };
+    } catch {
+      detail = { code: "unknown", message: res.statusText };
+    }
+    throw new ApiError(res.status, detail);
+  }
+  const blob = await res.blob();
+  const ext = format === "json" ? "json" : "csv";
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `saved_jobs.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ---------------------------------------------------------------------------
 // Coverage / debug
 // ---------------------------------------------------------------------------
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { JobSummaryResponse } from "@/lib/api-types";
-import { listJobs, dismissJob } from "@/lib/api";
+import { listJobs, dismissJob, exportSavedJobs } from "@/lib/api";
 import { JobCard } from "./job-card";
 
 const PAGE_SIZE = 20;
@@ -25,6 +25,7 @@ export function SavedView({
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +74,17 @@ export function SavedView({
     [],
   );
 
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    setExporting(true);
+    try {
+      await exportSavedJobs(format);
+    } catch {
+      // Best-effort — download failures are visible in the browser
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
   const totalPages =
     state.status === "loaded" ? Math.ceil(state.total / PAGE_SIZE) : 0;
   const currentPage =
@@ -89,7 +101,7 @@ export function SavedView({
         </h1>
       </header>
 
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <input
           type="text"
           placeholder="Search saved jobs..."
@@ -100,6 +112,26 @@ export function SavedView({
           }}
           className="w-full rounded-full border border-stone-200 bg-white/80 px-5 py-2.5 text-sm text-stone-700 placeholder:text-stone-400 focus:border-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-fuchsia-200 sm:max-w-xs"
         />
+        {state.status === "loaded" && state.total > 0 && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={exporting}
+              onClick={() => handleExport("csv")}
+              className="rounded-full border border-stone-200 bg-white/70 px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-white disabled:opacity-40"
+            >
+              {exporting ? "Exporting..." : "Export CSV"}
+            </button>
+            <button
+              type="button"
+              disabled={exporting}
+              onClick={() => handleExport("json")}
+              className="rounded-full border border-stone-200 bg-white/70 px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-white disabled:opacity-40"
+            >
+              Export JSON
+            </button>
+          </div>
+        )}
       </div>
 
       {state.status === "loading" && (
