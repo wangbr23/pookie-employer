@@ -1,0 +1,83 @@
+{
+  "jobs": [
+    {
+      "id": "a1b2c3d4-1111-2222-3333-444455556666",
+      "title": "Senior Software Engineer, Backend",
+      "department": "Engineering",
+      "team": "Backend",
+      "employmentType": "FullTime",
+      "location": "San Francisco, CA",
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "On-site",
+      "publishedAt": "2026-08-15T18:00:00.000+00:00",
+      "address": {
+        "postalAddress": {
+          "addressRegion": "California",
+          "addressCountry": "USA",
+          "addressLocality": "San Francisco"
+        }
+      },
+      "secondaryLocations": [],
+      "jobUrl": "https://jobs.ashbyhq.com/fathom/a1b2c3d4-1111-2222-3333-444455556666",
+      "applyUrl": "https://jobs.ashbyhq.com/fathom/a1b2c3d4-1111-2222-3333-444455556666/application",
+      "descriptionHtml": "<p>We are looking for a Senior Backend Engineer to build core infrastructure.</p><h3>Requirements</h3><ul><li>5+ years of experience</li><li>Python or Go</li></ul>",
+      "descriptionPlain": "We are looking for a Senior Backend Engineer to build core infrastructure.\n\nRequirements\n- 5+ years of experience\n- Python or Go"
+    },
+    {
+      "id": "b2c3d4e5-2222-3333-4444-555566667777",
+      "title": "Product Manager",
+      "department": "Product",
+      "team": "Core Product",
+      "employmentType": "FullTime",
+      "location": "Remote (US)",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "publishedAt": "2026-08-20T10:30:00.000+00:00",
+      "address": {
+        "postalAddress": {
+          "addressCountry": "United States"
+        }
+      },
+      "secondaryLocations": [],
+      "jobUrl": "https://jobs.ashbyhq.com/fathom/b2c3d4e5-2222-3333-4444-555566667777",
+      "applyUrl": "https://jobs.ashbyhq.com/fathom/b2c3d4e5-2222-3333-4444-555566667777/application",
+      "descriptionHtml": "<p>Lead product strategy for our AI meeting assistant.</p>",
+      "descriptionPlain": "Lead product strategy for our AI meeting assistant."
+    },
+    {
+      "id": "c3d4e5f6-3333-4444-5555-666677778888",
+      "title": "Frontend Engineer",
+      "department": "Engineering",
+      "team": "Frontend",
+      "employmentType": "FullTime",
+      "location": "New York, NY",
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "Hybrid",
+      "publishedAt": "2026-08-22T14:00:00.000+00:00",
+      "address": {
+        "postalAddress": {
+          "addressRegion": "NY",
+          "addressCountry": "USA",
+          "addressLocality": "New York City"
+        }
+      },
+      "secondaryLocations": [
+        {
+          "location": "Remote (US)",
+          "address": {
+            "postalAddress": {
+              "addressCountry": "United States"
+            }
+          }
+        }
+      ],
+      "jobUrl": "https://jobs.ashbyhq.com/fathom/c3d4e5f6-3333-4444-5555-666677778888",
+      "applyUrl": "https://jobs.ashbyhq.com/fathom/c3d4e5f6-3333-4444-5555-666677778888/application",
+      "descriptionHtml": "<p>Build beautiful, responsive interfaces for our web app.</p>",
+      "descriptionPlain": "Build beautiful, responsive interfaces for our web app."
+    }
+  ]
+}
