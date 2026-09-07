@@ -5,6 +5,7 @@ import { ForYouView } from "@/components/for-you-view";
 import { AllJobsView } from "@/components/all-jobs-view";
 import { SavedView } from "@/components/saved-view";
 import { DismissedView } from "@/components/dismissed-view";
+import { DebugView } from "@/components/debug-view";
 
 type View = "for-you" | "all-jobs" | "saved" | "dismissed" | "debug";
 
@@ -51,19 +52,16 @@ export default function Home() {
             {NAV_ITEMS.map((item) => {
               const isActive = active === item.view;
               const count = counts[item.view];
-              const disabled = item.view === "debug";
               return (
                 <button
                   key={item.view}
                   type="button"
-                  onClick={() => !disabled && setActive(item.view)}
+                  onClick={() => setActive(item.view)}
                   className={[
                     "flex w-full items-center justify-between rounded-[22px] px-5 py-4 text-left text-lg font-semibold transition-colors",
                     isActive
                       ? "bg-gradient-to-r from-fuchsia-400 to-pink-500 text-white shadow-lg shadow-pink-200"
-                      : disabled
-                        ? "cursor-default text-stone-400"
-                        : "text-stone-600 hover:bg-white/35",
+                      : "text-stone-600 hover:bg-white/35",
                   ].join(" ")}
                 >
                   <span className="flex items-center gap-3">
@@ -99,9 +97,7 @@ export default function Home() {
             <span className="shrink-0 text-lg font-bold text-stone-700">
               <span className="text-fuchsia-400">✦</span> Pookie
             </span>
-            {NAV_ITEMS.filter(
-              (i) => i.view !== "debug",
-            ).map((item) => (
+            {NAV_ITEMS.map((item) => (
               <button
                 key={item.view}
                 type="button"
@@ -131,13 +127,7 @@ export default function Home() {
             {active === "dismissed" && (
               <DismissedView onTotalChange={setDismissedCount} />
             )}
-            {active === "debug" && (
-              <div className="max-w-6xl py-20 text-center text-stone-500">
-                <p className="text-lg">
-                  This view is coming soon.
-                </p>
-              </div>
-            )}
+            {active === "debug" && <DebugView />}
           </section>
         </div>
       </div>

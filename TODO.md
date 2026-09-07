@@ -79,9 +79,9 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: dashboard shows new jobs grouped by fit bucket, supports all active jobs view, filter/search basics, old jobs remain accessible, and page load uses stored evaluations rather than live AI calls.
 - [x] `T27` Implement Saved and Archived/Possibly Closed views — agent, depends-on: T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend routes show saved jobs, dismissed/archived jobs, and possibly-closed jobs using backend data, with empty/loading/error states.
-- [ ] `T28` Wire save, dismiss, seen, and apply-link interactions — agent, depends-on: T11, T26, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T28` Wire save, dismiss, seen, and apply-link interactions — agent, depends-on: T11, T26, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: job cards can save, dismiss with structured reason, mark seen as appropriate, and open preserved apply links; backend state changes are reflected in the UI.
-- [ ] `T29` Build refresh status and debug/coverage view — agent, depends-on: T10, T17, T25, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T29` Build refresh status and debug/coverage view — agent, depends-on: T10, T17, T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend provides a Refresh jobs action, shows refresh status/result, and the debug page shows last refresh time, source statuses, counts, errors, elapsed time, AI call count/cost when available, pending evaluations, and partial-failure states.
 
 ## Operations and data controls
