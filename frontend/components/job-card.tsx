@@ -118,6 +118,21 @@ export function JobCard({ job }: { job: JobSummaryResponse }) {
                 Saved
               </span>
             )}
+            {job.status === "dismissed" && (
+              <span className="inline-flex items-center rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold text-stone-600">
+                Dismissed
+              </span>
+            )}
+            {job.status === "possibly_closed" && (
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                Possibly Closed
+              </span>
+            )}
+            {job.status === "closed_archived" && (
+              <span className="inline-flex items-center rounded-full bg-stone-200 px-2.5 py-1 text-xs font-semibold text-stone-500">
+                Archived
+              </span>
+            )}
           </p>
         </div>
 

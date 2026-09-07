@@ -77,7 +77,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: frontend has a small typed API client based on the backend OpenAPI/contracts, handles auth/proxy configuration, and can fetch placeholder jobs from FastAPI in local dev.
 - [x] `T26` Implement For You and All Jobs views with backend data — agent, depends-on: T21, T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: dashboard shows new jobs grouped by fit bucket, supports all active jobs view, filter/search basics, old jobs remain accessible, and page load uses stored evaluations rather than live AI calls.
-- [ ] `T27` Implement Saved and Archived/Possibly Closed views — agent, depends-on: T25, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T27` Implement Saved and Archived/Possibly Closed views — agent, depends-on: T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend routes show saved jobs, dismissed/archived jobs, and possibly-closed jobs using backend data, with empty/loading/error states.
 - [ ] `T28` Wire save, dismiss, seen, and apply-link interactions — agent, depends-on: T11, T26, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: job cards can save, dismiss with structured reason, mark seen as appropriate, and open preserved apply links; backend state changes are reflected in the UI.

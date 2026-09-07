@@ -3,6 +3,8 @@
 import { useCallback, useState } from "react";
 import { ForYouView } from "@/components/for-you-view";
 import { AllJobsView } from "@/components/all-jobs-view";
+import { SavedView } from "@/components/saved-view";
+import { DismissedView } from "@/components/dismissed-view";
 
 type View = "for-you" | "all-jobs" | "saved" | "dismissed" | "debug";
 
@@ -26,6 +28,14 @@ export default function Home() {
     (n: number) => setCounts((prev) => ({ ...prev, "all-jobs": n })),
     [],
   );
+  const setSavedCount = useCallback(
+    (n: number) => setCounts((prev) => ({ ...prev, saved: n })),
+    [],
+  );
+  const setDismissedCount = useCallback(
+    (n: number) => setCounts((prev) => ({ ...prev, dismissed: n })),
+    [],
+  );
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fff1f6,_transparent_32%),linear-gradient(180deg,_#fdeef4_0%,_#f8edf8_42%,_#f7f2ff_100%)] text-stone-800">
@@ -41,10 +51,7 @@ export default function Home() {
             {NAV_ITEMS.map((item) => {
               const isActive = active === item.view;
               const count = counts[item.view];
-              const disabled =
-                item.view === "saved" ||
-                item.view === "dismissed" ||
-                item.view === "debug";
+              const disabled = item.view === "debug";
               return (
                 <button
                   key={item.view}
@@ -93,8 +100,7 @@ export default function Home() {
               <span className="text-fuchsia-400">✦</span> Pookie
             </span>
             {NAV_ITEMS.filter(
-              (i) =>
-                i.view === "for-you" || i.view === "all-jobs",
+              (i) => i.view !== "debug",
             ).map((item) => (
               <button
                 key={item.view}
@@ -119,9 +125,13 @@ export default function Home() {
             {active === "all-jobs" && (
               <AllJobsView onTotalChange={setAllJobsCount} />
             )}
-            {(active === "saved" ||
-              active === "dismissed" ||
-              active === "debug") && (
+            {active === "saved" && (
+              <SavedView onTotalChange={setSavedCount} />
+            )}
+            {active === "dismissed" && (
+              <DismissedView onTotalChange={setDismissedCount} />
+            )}
+            {active === "debug" && (
               <div className="max-w-6xl py-20 text-center text-stone-500">
                 <p className="text-lg">
                   This view is coming soon.
