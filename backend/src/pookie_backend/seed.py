@@ -50,6 +50,9 @@ SEED_PROFILE_VALUES = {
         "and platform roles. Placeholder values should be confirmed before any user-facing use."
     ),
     "profile_version": 1,
+    "ai_consent_given": True,
+    "ai_consent_provider": "openrouter",
+    "ai_consent_model_family": "z-ai/glm",
 }
 
 

@@ -134,6 +134,7 @@ class AIService:
             call.status = AiCallStatus.FAILED
             raise
         call.status = AiCallStatus.SUCCEEDED
+        _record_usage(call, self.provider)
         return result
 
     def _check_consent(self, profile: UserProfile) -> None:
@@ -149,3 +150,16 @@ class AIService:
             )
         if not self.provider.model_name.startswith(profile.ai_consent_model_family):
             raise AIProviderNotAllowedError("Model is not allowed by profile consent")
+
+
+def _record_usage(call: AiCallLog, provider: AIProvider) -> None:
+    """Copy token/cost metadata from the provider if it exposes usage."""
+    usage = getattr(provider, "last_usage", None)
+    if usage is None:
+        return
+    if hasattr(usage, "input_tokens") and usage.input_tokens is not None:
+        call.input_tokens = usage.input_tokens
+    if hasattr(usage, "output_tokens") and usage.output_tokens is not None:
+        call.output_tokens = usage.output_tokens
+    if hasattr(usage, "estimated_cost") and usage.estimated_cost is not None:
+        call.estimated_cost = usage.estimated_cost

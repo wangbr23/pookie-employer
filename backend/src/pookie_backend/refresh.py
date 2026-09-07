@@ -23,8 +23,7 @@ from pookie_backend.adapters.greenhouse import (
     fetch_greenhouse_postings,
 )
 from pookie_backend.adapters.lever import LeverResult, fetch_lever_postings
-from pookie_backend.ai.interface import AIService
-from pookie_backend.ai.mock import MockAIProvider
+from pookie_backend.ai import AIProvider, AIService, create_provider
 from pookie_backend.dedupe import dedupe_and_upsert
 from pookie_backend.evaluation import EvaluationRunCounts, evaluate_pending_jobs
 from pookie_backend.ingestion import (
@@ -116,6 +115,7 @@ def run_refresh(
     source_timeout: float = SOURCE_TIMEOUT_SECONDS,
     crawl_budget: float = CRAWL_BUDGET_SECONDS,
     evaluation_cap: int = EVALUATION_CAP,
+    ai_provider: AIProvider | None = None,
 ) -> RefreshResult:
     """Orchestrate one full refresh cycle.
 
@@ -235,7 +235,8 @@ def run_refresh(
     evaluation_counts: EvaluationRunCounts | None = None
     profile = session.scalar(select(UserProfile).limit(1))
     if profile is not None and evaluation_cap > 0:
-        ai_service = AIService(MockAIProvider(), session)
+        provider = ai_provider if ai_provider is not None else create_provider()
+        ai_service = AIService(provider, session)
         evaluation_counts = evaluate_pending_jobs(
             session, ai_service, profile, limit=evaluation_cap
         )

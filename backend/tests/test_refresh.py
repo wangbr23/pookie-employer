@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from pookie_backend.adapters.greenhouse import GreenhouseResult
 from pookie_backend.adapters.lever import LeverResult
+from pookie_backend.ai.mock import MockAIProvider
 from pookie_backend.ingestion import RawPostingInput
 from pookie_backend.models import (
     ApprovalStatus,
@@ -230,7 +231,9 @@ class TestEvaluation:
             postings=[_posting("e1"), _posting("e2", title="Frontend Dev")]
         )
 
-        result = run_refresh(db_session, evaluation_cap=25)
+        result = run_refresh(
+            db_session, evaluation_cap=25, ai_provider=MockAIProvider()
+        )
 
         assert result.evaluation_counts is not None
         assert result.evaluation_counts.evaluated >= 0

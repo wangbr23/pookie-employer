@@ -1,5 +1,6 @@
 """Application configuration."""
 
+from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
@@ -32,6 +33,12 @@ class Settings(BaseSettings):
         default="http://localhost:3000,http://127.0.0.1:3000",
         alias="CORS_ALLOWED_ORIGINS",
     )
+
+    open_router_api_key: SecretStr | None = Field(
+        default=None, alias="OPEN_ROUTER_API_KEY"
+    )
+    ai_model: str = Field(default="z-ai/glm-5.3-flash", alias="AI_MODEL")
+    ai_monthly_budget: Decimal = Field(default=Decimal("5.00"), alias="AI_MONTHLY_BUDGET")
 
     @field_validator("cors_allowed_origins")
     @classmethod
