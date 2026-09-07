@@ -75,7 +75,7 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
   - Done when: frontend has the warm sidebar/layout/card styling inspired by `docs/specs/mocks/mock.png`, uses static mock software-engineering job data, and includes no backend integration.
 - [x] `T25` Add frontend API client and authenticated backend fetch setup — agent, depends-on: T10, T24, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend has a small typed API client based on the backend OpenAPI/contracts, handles auth/proxy configuration, and can fetch placeholder jobs from FastAPI in local dev.
-- [ ] `T26` Implement For You and All Jobs views with backend data — agent, depends-on: T21, T25, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T26` Implement For You and All Jobs views with backend data — agent, depends-on: T21, T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: dashboard shows new jobs grouped by fit bucket, supports all active jobs view, filter/search basics, old jobs remain accessible, and page load uses stored evaluations rather than live AI calls.
 - [ ] `T27` Implement Saved and Archived/Possibly Closed views — agent, depends-on: T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend routes show saved jobs, dismissed/archived jobs, and possibly-closed jobs using backend data, with empty/loading/error states.

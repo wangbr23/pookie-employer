@@ -73,3 +73,14 @@ Validated T37 against a clean Homebrew PostgreSQL 15 database named `pookie_t37_
 ## 2026-09-01 — T8 seed command added
 
 Added `python -m pookie_backend.seed` and `make seed` to seed one admin-configured `UserProfile` plus five approved `JobSource` rows across Greenhouse, Lever, and Ashby. The seed logic is idempotent via lookup-before-insert on `owner_user_id` and a `(kind, company_name, external_board_id)` natural key for sources. Added pytest coverage for duplicate suppression and expected seeded shape. Local test/lint/typecheck commands could not be fully run in this workspace because the backend `venv/` and pytest/ruff/mypy binaries are absent.
+
+## 2026-09-06 — T26 For You and All Jobs views
+
+Replaced the static mock dashboard with two real data-driven views backed by the `listJobs` API client:
+
+- **For You** — fetches new/seen jobs and groups them by fit bucket (Strong Fits, Good Fits, Stretch Picks, Needs Review), each section with a count header.
+- **All Jobs** — flat paginated list of all active (new/seen/saved) jobs with a text search input (title/company substring) and fit-bucket filter pill buttons.
+- Extracted `components/job-card.tsx` mapping `JobSummaryResponse` fields (salary, remote policy, fit bucket, relative timestamps, initials) to the existing warm card design.
+- Sidebar navigation switches between views client-side, shows live count badges; Saved/Dismissed/Debug remain placeholder (T27/T29 scope).
+- Mobile header with compact tab bar for For You / All Jobs.
+- Verified with seeded test data: grouping, search filtering, bucket filtering, pagination counter, and empty states all work. Lint, typecheck, and build pass clean.
