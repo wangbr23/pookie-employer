@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { JobSummaryResponse, FitBucket } from "@/lib/api-types";
-import { listJobs } from "@/lib/api";
+import { listJobs, saveJob, dismissJob } from "@/lib/api";
 import { JobCard } from "./job-card";
 
 const PAGE_SIZE = 20;
@@ -67,6 +67,29 @@ export function AllJobsView({
       cancelled = true;
     };
   }, [search, activeBucket, offset, onTotalChange]);
+
+  const handleSave = useCallback(async (jobId: string) => {
+    const updated = await saveJob(jobId);
+    setState((prev) => {
+      if (prev.status !== "loaded") return prev;
+      return { ...prev, jobs: prev.jobs.map((j) => (j.id === jobId ? updated : j)) };
+    });
+  }, []);
+
+  const handleDismiss = useCallback(
+    async (jobId: string, reasons: string[], freeText?: string) => {
+      await dismissJob(jobId, { reasons, free_text: freeText });
+      setState((prev) => {
+        if (prev.status !== "loaded") return prev;
+        return {
+          ...prev,
+          jobs: prev.jobs.filter((j) => j.id !== jobId),
+          total: prev.total - 1,
+        };
+      });
+    },
+    [],
+  );
 
   const totalPages =
     state.status === "loaded" ? Math.ceil(state.total / PAGE_SIZE) : 0;
@@ -142,7 +165,7 @@ export function AllJobsView({
           </p>
           <div className="space-y-5">
             {state.jobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+              <JobCard key={job.id} job={job} onSave={handleSave} onDismiss={handleDismiss} />
             ))}
           </div>
 

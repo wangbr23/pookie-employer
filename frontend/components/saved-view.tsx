@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { JobSummaryResponse } from "@/lib/api-types";
-import { listJobs } from "@/lib/api";
+import { listJobs, dismissJob } from "@/lib/api";
 import { JobCard } from "./job-card";
 
 const PAGE_SIZE = 20;
@@ -58,6 +58,21 @@ export function SavedView({
     };
   }, [search, offset, onTotalChange]);
 
+  const handleDismiss = useCallback(
+    async (jobId: string, reasons: string[], freeText?: string) => {
+      await dismissJob(jobId, { reasons, free_text: freeText });
+      setState((prev) => {
+        if (prev.status !== "loaded") return prev;
+        return {
+          ...prev,
+          jobs: prev.jobs.filter((j) => j.id !== jobId),
+          total: prev.total - 1,
+        };
+      });
+    },
+    [],
+  );
+
   const totalPages =
     state.status === "loaded" ? Math.ceil(state.total / PAGE_SIZE) : 0;
   const currentPage =
@@ -112,7 +127,7 @@ export function SavedView({
           </p>
           <div className="space-y-5">
             {state.jobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+              <JobCard key={job.id} job={job} onDismiss={handleDismiss} />
             ))}
           </div>
 

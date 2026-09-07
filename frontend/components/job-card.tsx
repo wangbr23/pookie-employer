@@ -1,6 +1,8 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { JobSummaryResponse, FitBucket } from "@/lib/api-types";
+import { markJobSeen } from "@/lib/api";
 
 const FIT_LABELS: Record<FitBucket, string> = {
   strong: "Strong Fit",
@@ -22,6 +24,17 @@ const REMOTE_LABELS: Record<string, string> = {
   onsite: "On-site",
   unclear: "Location TBD",
 };
+
+const DISMISS_REASONS = [
+  "Not interested in this role",
+  "Wrong location",
+  "Compensation too low",
+  "Wrong seniority level",
+  "Already applied",
+  "Company not a fit",
+];
+
+const INACTIVE_STATUSES: string[] = ["dismissed", "possibly_closed", "closed_archived"];
 
 function formatSalary(job: JobSummaryResponse): string {
   if (job.salary_unknown || (!job.salary_min && !job.salary_max))
@@ -67,7 +80,58 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: string }) 
   );
 }
 
-export function JobCard({ job }: { job: JobSummaryResponse }) {
+export interface JobCardProps {
+  job: JobSummaryResponse;
+  onSave?: (jobId: string) => Promise<void>;
+  onDismiss?: (jobId: string, reasons: string[], freeText?: string) => Promise<void>;
+}
+
+export function JobCard({ job, onSave, onDismiss }: JobCardProps) {
+  const [saving, setSaving] = useState(false);
+  const [showDismissForm, setShowDismissForm] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+  const [freeText, setFreeText] = useState("");
+  const seenRef = useRef(false);
+
+  useEffect(() => {
+    if (job.status === "new" && !seenRef.current) {
+      seenRef.current = true;
+      markJobSeen(job.id).catch(() => {});
+    }
+  }, [job.id, job.status]);
+
+  const handleSave = useCallback(async () => {
+    if (!onSave || saving) return;
+    setSaving(true);
+    try {
+      await onSave(job.id);
+    } finally {
+      setSaving(false);
+    }
+  }, [job.id, onSave, saving]);
+
+  const handleDismissConfirm = useCallback(async () => {
+    if (!onDismiss || dismissing || selectedReasons.length === 0) return;
+    setDismissing(true);
+    try {
+      await onDismiss(job.id, selectedReasons, freeText || undefined);
+    } finally {
+      setDismissing(false);
+    }
+  }, [job.id, onDismiss, dismissing, selectedReasons, freeText]);
+
+  const toggleReason = useCallback((reason: string) => {
+    setSelectedReasons((prev) =>
+      prev.includes(reason)
+        ? prev.filter((r) => r !== reason)
+        : [...prev, reason],
+    );
+  }, []);
+
+  const showSave = job.status !== "saved" && !!onSave;
+  const showDismiss = !INACTIVE_STATUSES.includes(job.status) && !!onDismiss;
+
   const bucket = job.fit_bucket;
   const bucketLabel = bucket ? FIT_LABELS[bucket] : null;
   const bucketTone = bucket ? FIT_TONES[bucket] : "";
@@ -137,18 +201,29 @@ export function JobCard({ job }: { job: JobSummaryResponse }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-900 transition-colors hover:bg-rose-100"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-100"
-          >
-            Dismiss
-          </button>
+          {showSave && (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={handleSave}
+              className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-900 transition-colors hover:bg-rose-100 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          )}
+          {showDismiss && (
+            <button
+              type="button"
+              onClick={() => setShowDismissForm((v) => !v)}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                showDismissForm
+                  ? "border-stone-400 bg-stone-200 text-stone-800"
+                  : "border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100"
+              }`}
+            >
+              Dismiss
+            </button>
+          )}
           {job.apply_url && (
             <a
               href={job.apply_url}
@@ -161,6 +236,58 @@ export function JobCard({ job }: { job: JobSummaryResponse }) {
           )}
         </div>
       </div>
+
+      {showDismissForm && (
+        <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50/80 p-4">
+          <p className="mb-3 text-sm font-semibold text-stone-700">
+            Why are you dismissing this?
+          </p>
+          <div className="space-y-2">
+            {DISMISS_REASONS.map((reason) => (
+              <label
+                key={reason}
+                className="flex cursor-pointer items-center gap-2.5 text-sm text-stone-600"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedReasons.includes(reason)}
+                  onChange={() => toggleReason(reason)}
+                  className="rounded border-stone-300 text-fuchsia-500 focus:ring-fuchsia-300"
+                />
+                {reason}
+              </label>
+            ))}
+          </div>
+          <textarea
+            placeholder="Anything else? (optional)"
+            value={freeText}
+            onChange={(e) => setFreeText(e.target.value)}
+            className="mt-3 w-full rounded-xl border border-stone-200 bg-white/80 px-3 py-2 text-sm text-stone-700 placeholder:text-stone-400 focus:border-fuchsia-300 focus:outline-none focus:ring-2 focus:ring-fuchsia-200"
+            rows={2}
+          />
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              disabled={selectedReasons.length === 0 || dismissing}
+              onClick={handleDismissConfirm}
+              className="rounded-full bg-stone-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-stone-800 disabled:opacity-40"
+            >
+              {dismissing ? "Dismissing..." : "Confirm"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowDismissForm(false);
+                setSelectedReasons([]);
+                setFreeText("");
+              }}
+              className="rounded-full border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

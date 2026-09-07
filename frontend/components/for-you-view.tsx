@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { JobSummaryResponse, FitBucket } from "@/lib/api-types";
-import { listJobs } from "@/lib/api";
+import { listJobs, saveJob, dismissJob } from "@/lib/api";
 import { JobCard } from "./job-card";
 
 const BUCKET_ORDER: FitBucket[] = ["strong", "possible", "stretch", "needs_review"];
@@ -56,6 +56,32 @@ export function ForYouView({ onTotalChange }: { onTotalChange?: (n: number) => v
     return () => { cancelled = true; };
   }, [onTotalChange]);
 
+  const removeJob = useCallback((jobId: string) => {
+    setState((prev) => {
+      if (prev.status !== "loaded") return prev;
+      const groups = prev.groups
+        .map((g) => ({ ...g, jobs: g.jobs.filter((j) => j.id !== jobId) }))
+        .filter((g) => g.jobs.length > 0);
+      return { ...prev, groups };
+    });
+  }, []);
+
+  const handleSave = useCallback(
+    async (jobId: string) => {
+      await saveJob(jobId);
+      removeJob(jobId);
+    },
+    [removeJob],
+  );
+
+  const handleDismiss = useCallback(
+    async (jobId: string, reasons: string[], freeText?: string) => {
+      await dismissJob(jobId, { reasons, free_text: freeText });
+      removeJob(jobId);
+    },
+    [removeJob],
+  );
+
   return (
     <div className="max-w-6xl">
       <header className="mb-8 flex flex-col gap-3">
@@ -101,7 +127,7 @@ export function ForYouView({ onTotalChange }: { onTotalChange?: (n: number) => v
             </h2>
             <div className="space-y-5">
               {jobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+                <JobCard key={job.id} job={job} onSave={handleSave} onDismiss={handleDismiss} />
               ))}
             </div>
           </section>
