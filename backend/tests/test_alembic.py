@@ -43,7 +43,7 @@ def test_alembic_env_configuration():
 
     versions_dir = backend_dir / "alembic" / "versions"
     assert versions_dir.is_dir()
-    assert script_dir.get_heads() == ["6f5a807ad4cb"]
+    assert script_dir.get_heads() == ["0005_add_workday_source_kind"]
 
 
 def test_alembic_heads_command_runs_without_database():
@@ -59,7 +59,7 @@ def test_alembic_heads_command_runs_without_database():
     )
 
     assert result.returncode == 0, result.stderr
-    assert "6f5a807ad4cb (head)" in result.stdout
+    assert "0005_add_workday_source_kind (head)" in result.stdout
 
 
 def test_alembic_current_command():

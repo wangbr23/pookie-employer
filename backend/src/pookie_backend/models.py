@@ -30,6 +30,7 @@ class SourceKind(StrEnum):
     GREENHOUSE = "greenhouse"
     LEVER = "lever"
     ASHBY = "ashby"
+    WORKDAY = "workday"
     COMPANY_PAGE = "company_page"
 
 

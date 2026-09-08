@@ -49,6 +49,7 @@ def test_core_enums_use_persisted_values():
         "greenhouse",
         "lever",
         "ashby",
+        "workday",
         "company_page",
     ]
     assert [member.value for member in SourceStatus] == [

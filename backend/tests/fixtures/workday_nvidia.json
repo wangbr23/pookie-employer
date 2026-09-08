@@ -1,0 +1,26 @@
+{
+  "total": 2000,
+  "jobPostings": [
+    {
+      "title": "ASIC Design Engineer, Tools and Methodology Development",
+      "externalPath": "/job/US-TX-Austin/ASIC-Design-Engineer--Tools-and-Methodology-Development_JR2025219",
+      "locationsText": "US, TX, Austin",
+      "postedOn": "Posted Today",
+      "bulletFields": ["JR2025219"]
+    },
+    {
+      "title": "Senior Software Engineer, Autonomous Driving Perception",
+      "externalPath": "/job/US-CA-Santa-Clara/Senior-Software-Engineer--Autonomous-Driving-Perception_JR1999123",
+      "locationsText": "2 Locations",
+      "postedOn": "Posted Yesterday",
+      "bulletFields": ["JR1999123"]
+    },
+    {
+      "title": "Research Scientist, Graphics Architecture",
+      "externalPath": "/job/US-WA-Redmond/Research-Scientist--Graphics-Architecture_JR1988777",
+      "locationsText": "US, WA, Redmond",
+      "postedOn": "Posted 3 Days Ago",
+      "bulletFields": ["JR1988777"]
+    }
+  ]
+}

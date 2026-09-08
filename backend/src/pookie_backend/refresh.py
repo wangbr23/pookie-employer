@@ -23,6 +23,10 @@ from pookie_backend.adapters.greenhouse import (
     fetch_greenhouse_postings,
 )
 from pookie_backend.adapters.lever import LeverResult, fetch_lever_postings
+from pookie_backend.adapters.workday import (
+    WorkdayResult,
+    fetch_workday_postings,
+)
 from pookie_backend.ai import AIProvider, AIService, create_provider
 from pookie_backend.dedupe import dedupe_and_upsert
 from pookie_backend.evaluation import EvaluationRunCounts, evaluate_pending_jobs
@@ -70,13 +74,15 @@ class SourceFetchResult:
 def _fetch_source(source: JobSource, timeout: float) -> SourceFetchResult:
     """Call the right adapter for *source* and return a uniform result."""
     kind = source.kind
-    r: GreenhouseResult | LeverResult | AshbyResult
+    r: GreenhouseResult | LeverResult | AshbyResult | WorkdayResult
     if kind == SourceKind.GREENHOUSE:
         r = fetch_greenhouse_postings(source, timeout=timeout)
     elif kind == SourceKind.LEVER:
         r = fetch_lever_postings(source, timeout=timeout)
     elif kind == SourceKind.ASHBY:
         r = fetch_ashby_postings(source, timeout=timeout)
+    elif kind == SourceKind.WORKDAY:
+        r = fetch_workday_postings(source, timeout=timeout)
     else:
         return SourceFetchResult(
             source_id=source.id,

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from pookie_backend.adapters.greenhouse import GreenhouseResult
 from pookie_backend.adapters.lever import LeverResult
+from pookie_backend.adapters.workday import WorkdayResult
 from pookie_backend.ai.mock import MockAIProvider
 from pookie_backend.ingestion import RawPostingInput
 from pookie_backend.models import (
@@ -130,17 +131,44 @@ class TestSuccessfulSources:
         assert source.last_successful_crawl_at is not None
         assert source.last_error_summary is None
 
+    @patch("pookie_backend.refresh.fetch_workday_postings")
+    def test_workday_source_dispatches_to_workday_adapter(
+        self, mock_fetch, db_session: Session
+    ) -> None:
+        _make_profile(db_session)
+        source = _make_source(
+            db_session,
+            kind=SourceKind.WORKDAY,
+            company="NVIDIA",
+            board_id="nvidia/NVIDIAExternalCareerSite",
+        )
+        mock_fetch.return_value = WorkdayResult(
+            postings=[_posting("wd-1")],
+        )
+
+        result = run_refresh(db_session, evaluation_cap=0)
+
+        assert result.sources_succeeded == 1
+        assert result.jobs_discovered == 1
+        assert source.last_successful_crawl_at is not None
+
     @patch("pookie_backend.refresh.fetch_lever_postings")
     @patch("pookie_backend.refresh.fetch_greenhouse_postings")
     def test_multiple_sources_aggregate_counts(
         self, mock_gh, mock_lever, db_session: Session
     ) -> None:
         _make_profile(db_session)
-        _make_source(db_session, kind=SourceKind.GREENHOUSE, company="Co1", board_id="co1")
+        _make_source(
+            db_session, kind=SourceKind.GREENHOUSE, company="Co1", board_id="co1"
+        )
         _make_source(db_session, kind=SourceKind.LEVER, company="Co2", board_id="co2")
 
-        mock_gh.return_value = GreenhouseResult(postings=[_posting("gh-1", company="Co1")])
-        mock_lever.return_value = LeverResult(postings=[_posting("lv-1", company="Co2")])
+        mock_gh.return_value = GreenhouseResult(
+            postings=[_posting("gh-1", company="Co1")]
+        )
+        mock_lever.return_value = LeverResult(
+            postings=[_posting("lv-1", company="Co2")]
+        )
 
         result = run_refresh(db_session, evaluation_cap=0)
 
@@ -182,7 +210,9 @@ class TestMixedSuccessFailure:
         self, mock_gh, mock_lever, db_session: Session
     ) -> None:
         _make_profile(db_session)
-        _make_source(db_session, kind=SourceKind.GREENHOUSE, company="OK", board_id="ok")
+        _make_source(
+            db_session, kind=SourceKind.GREENHOUSE, company="OK", board_id="ok"
+        )
         _make_source(db_session, kind=SourceKind.LEVER, company="Bad", board_id="bad")
 
         mock_gh.return_value = GreenhouseResult(postings=[_posting("p1", company="OK")])
@@ -222,9 +252,7 @@ class TestCrawlBudget:
 
 class TestEvaluation:
     @patch("pookie_backend.refresh.fetch_greenhouse_postings")
-    def test_evaluation_runs_after_crawl(
-        self, mock_fetch, db_session: Session
-    ) -> None:
+    def test_evaluation_runs_after_crawl(self, mock_fetch, db_session: Session) -> None:
         _make_profile(db_session)
         _make_source(db_session)
         mock_fetch.return_value = GreenhouseResult(
@@ -244,9 +272,7 @@ class TestEvaluation:
 
 
 class TestUnsupportedSourceKind:
-    def test_company_page_source_reports_no_adapter(
-        self, db_session: Session
-    ) -> None:
+    def test_company_page_source_reports_no_adapter(self, db_session: Session) -> None:
         _make_source(
             db_session, kind=SourceKind.COMPANY_PAGE, company="Manual", board_id="m"
         )
