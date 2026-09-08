@@ -9,7 +9,13 @@ import type {
   SourceRunResponse,
   SourceRunStatus,
 } from "@/lib/api-types";
-import { getCoverage, triggerRefresh, getCrawlRun } from "@/lib/api";
+import {
+  getCoverage,
+  triggerRefresh,
+  getCrawlRun,
+  deleteProfileData,
+  deleteJobHistory,
+} from "@/lib/api";
 import { ApiError } from "@/lib/api";
 
 type CoverageState =
@@ -141,6 +147,163 @@ export function DebugView() {
           <SourceTable sources={coverage.data.sources} />
         </>
       )}
+
+      <DataManagement />
+    </div>
+  );
+}
+
+type DeletionState =
+  | { status: "idle" }
+  | { status: "confirming" }
+  | { status: "deleting" }
+  | { status: "done"; message: string }
+  | { status: "error"; message: string };
+
+function DeletionAction({
+  title,
+  description,
+  confirmWord,
+  onDelete,
+}: {
+  title: string;
+  description: string;
+  confirmWord: string;
+  onDelete: () => Promise<string>;
+}) {
+  const [state, setState] = useState<DeletionState>({ status: "idle" });
+  const [input, setInput] = useState("");
+
+  const handleConfirm = useCallback(async () => {
+    setState({ status: "deleting" });
+    try {
+      const message = await onDelete();
+      setState({ status: "done", message });
+      setInput("");
+    } catch (err) {
+      setState({
+        status: "error",
+        message: err instanceof Error ? err.message : "Deletion failed",
+      });
+    }
+  }, [onDelete]);
+
+  if (state.status === "done") {
+    return (
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-5">
+        <p className="text-sm font-semibold text-emerald-800">{title}</p>
+        <p className="mt-1 text-sm text-emerald-700">{state.message}</p>
+        <button
+          type="button"
+          onClick={() => setState({ status: "idle" })}
+          className="mt-3 text-sm font-medium text-emerald-600 hover:text-emerald-800"
+        >
+          Dismiss
+        </button>
+      </div>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50/80 p-5">
+        <p className="text-sm font-semibold text-red-800">{title}</p>
+        <p className="mt-1 text-sm text-red-700">{state.message}</p>
+        <button
+          type="button"
+          onClick={() => setState({ status: "idle" })}
+          className="mt-3 text-sm font-medium text-red-600 hover:text-red-800"
+        >
+          Dismiss
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white/70 p-5">
+      <p className="text-sm font-semibold text-stone-700">{title}</p>
+      <p className="mt-1 text-sm text-stone-500">{description}</p>
+      {state.status === "idle" && (
+        <button
+          type="button"
+          onClick={() => setState({ status: "confirming" })}
+          className="mt-3 rounded-full border border-red-300 px-4 py-1.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+        >
+          Delete…
+        </button>
+      )}
+      {(state.status === "confirming" || state.status === "deleting") && (
+        <div className="mt-3">
+          <label className="block text-sm text-stone-600">
+            Type <span className="font-mono font-bold text-red-600">{confirmWord}</span> to confirm:
+          </label>
+          <div className="mt-1.5 flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={state.status === "deleting"}
+              className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-800 outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 disabled:opacity-50"
+              autoFocus
+            />
+            <button
+              type="button"
+              disabled={input !== confirmWord || state.status === "deleting"}
+              onClick={handleConfirm}
+              className="rounded-full bg-red-500 px-4 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+            >
+              {state.status === "deleting" ? "Deleting…" : "Confirm"}
+            </button>
+            <button
+              type="button"
+              disabled={state.status === "deleting"}
+              onClick={() => {
+                setState({ status: "idle" });
+                setInput("");
+              }}
+              className="text-sm text-stone-500 hover:text-stone-700 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DataManagement() {
+  const handleDeleteProfile = useCallback(async () => {
+    const result = await deleteProfileData();
+    return `Deleted ${result.deleted.evaluations} evaluations and ${result.deleted.ai_call_logs} AI call logs.`;
+  }, []);
+
+  const handleDeleteHistory = useCallback(async () => {
+    const result = await deleteJobHistory();
+    return `Deleted ${result.deleted.feedback_records} feedback records. Reset ${result.reset.jobs_to_seen} jobs to seen.`;
+  }, []);
+
+  return (
+    <div className="mt-8 rounded-2xl border border-red-100 bg-red-50/30 p-6">
+      <h2 className="mb-1 text-lg font-bold text-stone-700">Data Management</h2>
+      <p className="mb-5 text-sm text-stone-500">
+        These actions permanently delete data and cannot be undone.
+      </p>
+      <div className="space-y-4">
+        <DeletionAction
+          title="Delete Profile Data"
+          description="Removes all AI evaluations and call logs. Jobs and raw postings are preserved so you can re-evaluate."
+          confirmWord="delete-profile"
+          onDelete={handleDeleteProfile}
+        />
+        <DeletionAction
+          title="Delete Job History"
+          description="Removes all saved/dismissed feedback. Affected jobs revert to seen status."
+          confirmWord="delete-history"
+          onDelete={handleDeleteHistory}
+        />
+      </div>
     </div>
   );
 }

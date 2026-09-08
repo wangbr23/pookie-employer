@@ -157,6 +157,22 @@ export interface RankRunResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Deletion responses
+// ---------------------------------------------------------------------------
+
+export interface DeleteProfileDataResponse {
+  deleted: {
+    evaluations: number;
+    ai_call_logs: number;
+  };
+}
+
+export interface DeleteJobHistoryResponse {
+  deleted: { feedback_records: number };
+  reset: { jobs_to_seen: number };
+}
+
+// ---------------------------------------------------------------------------
 // Request bodies
 // ---------------------------------------------------------------------------
 

@@ -88,9 +88,9 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [x] `T30` Add export saved jobs endpoint and UI affordance — agent, depends-on: T9, T27, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: authenticated user can export saved jobs as CSV or JSON, export includes apply links and fit summaries, and tests cover authorization.
-- [ ] `T31` Add destructive data deletion endpoints only — agent, depends-on: T9, T37, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T31` Add destructive data deletion endpoints only — agent, depends-on: T9, T37, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: backend supports protected deletion of profile-derived data and job feedback/history with tests; frontend UI is not included in this task.
-- [ ] `T32` Add frontend data deletion controls — agent, depends-on: T31, T25, design: docs/designs/2026-08-31-pookie-employer.md
+- [x] `T32` Add frontend data deletion controls — agent, depends-on: T31, T25, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend exposes clearly labeled deletion controls with confirmation, calls backend deletion endpoints, and handles success/error states.
 - [ ] `T33` Select and document MVP deployment plan — manual, depends-on: T5, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: frontend hosting, backend hosting, managed Postgres provider, durability expectations, required production secrets, and on-demand refresh deployment flow are selected/documented without committing secrets. Daily scheduled refresh remains explicitly deferred.
@@ -101,3 +101,14 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 - [ ] `T35` Design onboarding/profile editing follow-up before implementation — manual, depends-on: T34, design: docs/designs/2026-08-31-pookie-employer.md
   - Done when: resume upload, extraction, confirmation/editing, raw resume retention, and AI consent UX are reviewed against the spec and either added to a new design patch or explicitly deferred.
+
+## Before launch
+
+Discovered during the T22/T23 end-to-end test (2026-09-07): the first live refresh pulled 246 jobs from 5 companies, only ~90 eng-titled, and the 25-per-run evaluation cap spends AI calls on obvious non-fits. These cut AI spend and improve coverage before real use.
+
+- [ ] `T38` Curate an expanded approved company/source list across Greenhouse, Lever, and Ashby — manual
+  - Done when: a reviewed list of target companies with board kind and board id exists (each board verified reachable), replacing the current 5-company test set.
+- [ ] `T39` Seed the expanded source list and prune dead boards — agent, complexity: simple, depends-on: T38
+  - Done when: new sources are seeded idempotently into `job_sources`, each fetches successfully through its adapter, and stale/unreachable boards (e.g. the 404-ing Greenhouse/Lever rows) are paused or removed.
+- [ ] `T40` Add profile-driven pre-evaluation eligibility filter (software-engineering roles, salary floor, allowed locations, seniority range) — agent, complexity: complex
+  - Done when: jobs failing the profile's target role families, salary floor, allowed locations, or seniority min/max skip AI evaluation without spending provider calls; filtered jobs are retained and visible with a skip reason rather than deleted; filter decisions are counted in crawl run reporting; tests cover each criterion and interplay with the evaluation cap.

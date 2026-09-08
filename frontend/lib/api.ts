@@ -2,6 +2,8 @@ import type {
   ApiErrorDetail,
   CoverageResponse,
   CrawlRunResponse,
+  DeleteJobHistoryResponse,
+  DeleteProfileDataResponse,
   DismissJobRequest,
   JobDetailResponse,
   JobListResponse,
@@ -157,6 +159,22 @@ export async function exportSavedJobs(format: "csv" | "json" = "csv"): Promise<v
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+// ---------------------------------------------------------------------------
+// Deletion
+// ---------------------------------------------------------------------------
+
+export function deleteProfileData(): Promise<DeleteProfileDataResponse> {
+  return request<DeleteProfileDataResponse>("/api/profile", {
+    method: "DELETE",
+  });
+}
+
+export function deleteJobHistory(): Promise<DeleteJobHistoryResponse> {
+  return request<DeleteJobHistoryResponse>("/api/job-history", {
+    method: "DELETE",
+  });
 }
 
 // ---------------------------------------------------------------------------
