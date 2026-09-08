@@ -167,6 +167,21 @@ SEED_SOURCES: Sequence[SeedSource] = (
         "base_url": "https://jobs.ashbyhq.com/notion",
         "external_board_id": "notion",
     },
+    # --- Workday boards (verified reachable 2026-09-08) ---
+    {
+        "kind": SourceKind.WORKDAY,
+        "name": "NVIDIA Careers",
+        "company_name": "NVIDIA",
+        "base_url": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite",
+        "external_board_id": "nvidia/NVIDIAExternalCareerSite",
+    },
+    {
+        "kind": SourceKind.WORKDAY,
+        "name": "Salesforce Careers",
+        "company_name": "Salesforce",
+        "base_url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site",
+        "external_board_id": "salesforce/External_Career_Site",
+    },
     # --- Smaller companies (original test sources) ---
     {
         "kind": SourceKind.GREENHOUSE,

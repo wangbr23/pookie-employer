@@ -121,14 +121,16 @@ Discovered during the T22/T23 end-to-end test (2026-09-07): the first live refre
 
 Companies from the target list that don't use Greenhouse, Lever, or Ashby. Each needs a new adapter or integration approach.
 
-- [ ] `T41` Implement Workday source adapter — agent, complexity: complex
+- [x] `T41` Implement Workday source adapter — agent, complexity: complex
   - Done when: a Workday adapter can fetch job postings via the `/wday/cxs/{tenant}/{site}/jobs` POST API, parse results into `RawPosting`s, and handle pagination; tested against at least one live Workday board.
   - Covers: NVIDIA (`nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite`, 1714 jobs), Salesforce (`salesforce.wd12.myworkdayjobs.com/External_Career_Site`, 526 jobs). Also potentially Adobe and others once their Workday site names are discovered.
+  - Completed 2026-09-08: `SourceKind.WORKDAY` + migration 0005 (native enum value). `external_board_id` stores `tenant/site`; host comes from `base_url`. Pages fetched offset-by-offset (page 0's `total` is the only reliable one — later pages answer `total: 0`); known offsets fetched with a 4-way pool because NVIDIA's ~2000 postings take ~96s sequential (~29s pooled). All-or-nothing per-source errors; in-fetch id dedupe for board churn. Live-verified: NVIDIA 1998 postings in 29.2s, Salesforce 1450 in 11.8s, apply URLs return 200. Known limits: list API has no descriptions (postings land in Needs Review; AI snapshot never reads descriptions anyway) and `locationsText` can be a count ("2 Locations") — kept as-is for downstream triage.
 - [ ] `T42` Implement Netflix source adapter — agent, complexity: medium
   - Done when: a Netflix adapter can fetch job postings via `explore.jobs.netflix.net/api/apply/v2/jobs?domain=netflix.com`, parse results into `RawPosting`s, and handle pagination; tested with fixture data.
   - API confirmed working: ~498 jobs, returns JSON with `positions` array.
-- [ ] `T43` Add NVIDIA and Salesforce as Workday sources — agent, complexity: simple, depends-on: T41
+- [x] `T43` Add NVIDIA and Salesforce as Workday sources — agent, complexity: simple, depends-on: T41
   - Done when: NVIDIA and Salesforce are seeded as Workday sources, fetch successfully through the Workday adapter, and appear in the dashboard.
+  - Completed 2026-09-08: seeded via `seed.py` (20 approved sources, idempotent); live refresh ran 20/20 sources succeeded — NVIDIA 2000 postings inserted, Salesforce 1449 inserted. Eligibility triage: NVIDIA 1632 not_engineering_role / 296 seniority_too_high / 67 location_mismatch / 4 non_engineering_specialty / 1 eligible; Salesforce 1389 / 35 / 22 / 2 / 1 eligible. Both eligible jobs evaluated (needs_review — expected, no descriptions) and verified in the UI: For You → Needs Review shows both cards with Workday apply links; All Jobs search "NVIDIA" returns the eligible job. Refresh took ~15 min end to end (crawl within budget; evaluation phase uncapped — pre-existing known issue).
 - [ ] `T44` Add Netflix source — agent, complexity: simple, depends-on: T42
   - Done when: Netflix is seeded as a source, fetches successfully through its adapter, and appears in the dashboard.
 - [ ] `T45` Research and implement aggregator API adapter for remaining companies — agent, complexity: complex
