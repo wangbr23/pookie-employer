@@ -1,0 +1,44 @@
+{
+  "count": 497,
+  "positions": [
+    {
+      "id": 790298014263,
+      "name": "AI Engineer 6 - AI Foundation & Tooling, Ads Platform",
+      "location": "USA - Remote",
+      "locations": [
+        "USA - Remote"
+      ],
+      "department": "Data & Insights",
+      "ats_job_id": "AJRT30201",
+      "display_job_id": "AJRT30201",
+      "job_description": "",
+      "canonicalPositionUrl": "https://explore.jobs.netflix.net/careers/job/790298014263"
+    },
+    {
+      "id": 790318399834,
+      "name": "Creative Tech Researcher 4",
+      "location": "Los Angeles,California,United States of America",
+      "locations": [
+        "Los Angeles,California,United States of America"
+      ],
+      "department": "Data & Insights",
+      "ats_job_id": "JR42475",
+      "display_job_id": "JR42475",
+      "job_description": "",
+      "canonicalPositionUrl": "https://explore.jobs.netflix.net/careers/job/790318399834"
+    },
+    {
+      "id": 790318109210,
+      "name": "Sr. Client Partner (UCAN - FinServ & Travel)",
+      "location": "New York,New York,United States of America",
+      "locations": [
+        "New York,New York,United States of America"
+      ],
+      "department": "Advertising",
+      "ats_job_id": "JR42309",
+      "display_job_id": "JR42309",
+      "job_description": "",
+      "canonicalPositionUrl": "https://explore.jobs.netflix.net/careers/job/790318109210"
+    }
+  ]
+}

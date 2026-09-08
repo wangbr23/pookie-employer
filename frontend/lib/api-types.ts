@@ -30,7 +30,13 @@ export type CrawlStatus =
 
 export type SourceRunStatus = "running" | "success" | "failed" | "skipped";
 
-export type SourceKind = "greenhouse" | "lever" | "ashby" | "company_page";
+export type SourceKind =
+  | "greenhouse"
+  | "lever"
+  | "ashby"
+  | "workday"
+  | "netflix"
+  | "company_page";
 
 export type SourceStatus = "active" | "paused" | "needs_review";
 

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from pookie_backend.adapters.greenhouse import GreenhouseResult
 from pookie_backend.adapters.lever import LeverResult
+from pookie_backend.adapters.netflix import NetflixResult
 from pookie_backend.adapters.workday import WorkdayResult
 from pookie_backend.ai.mock import MockAIProvider
 from pookie_backend.ingestion import RawPostingInput
@@ -144,6 +145,27 @@ class TestSuccessfulSources:
         )
         mock_fetch.return_value = WorkdayResult(
             postings=[_posting("wd-1")],
+        )
+
+        result = run_refresh(db_session, evaluation_cap=0)
+
+        assert result.sources_succeeded == 1
+        assert result.jobs_discovered == 1
+        assert source.last_successful_crawl_at is not None
+
+    @patch("pookie_backend.refresh.fetch_netflix_postings")
+    def test_netflix_source_dispatches_to_netflix_adapter(
+        self, mock_fetch, db_session: Session
+    ) -> None:
+        _make_profile(db_session)
+        source = _make_source(
+            db_session,
+            kind=SourceKind.NETFLIX,
+            company="Netflix",
+            board_id="netflix.com",
+        )
+        mock_fetch.return_value = NetflixResult(
+            postings=[_posting("nf-1")],
         )
 
         result = run_refresh(db_session, evaluation_cap=0)
