@@ -157,9 +157,13 @@ def _job_filters(
     status: list[JobStatus] | None,
     fit_bucket: list[FitBucket] | None,
     search: str | None,
+    *,
+    include_filtered: bool = False,
 ) -> list[ColumnElement[bool]]:
     """Translate query parameters into SQL conditions shared by page and count."""
     filters: list[ColumnElement[bool]] = []
+    if not include_filtered:
+        filters.append(Job.skip_reason.is_(None))
     if status:
         filters.append(Job.status.in_(status))
     if fit_bucket:

@@ -49,7 +49,7 @@ def test_seed_database_is_idempotent(db_session: Session) -> None:
         is not None
     )
     assert db_session.scalar(select(func.count()).select_from(UserProfile)) == 1
-    assert db_session.scalar(select(func.count()).select_from(JobSource)) == 5
+    assert db_session.scalar(select(func.count()).select_from(JobSource)) == 18
 
 
 def test_seed_database_creates_expected_profile_and_sources(db_session: Session) -> None:
@@ -62,9 +62,9 @@ def test_seed_database_creates_expected_profile_and_sources(db_session: Session)
         "platform engineering",
     ]
     assert profile.remote_preference == "remote_or_hybrid"
-    assert profile.salary_floor == Decimal("180000.00")
+    assert profile.salary_floor == Decimal("170000.00")
     assert "Python" in profile.preferred_tech
-    assert len(sources) == 5
+    assert len(sources) == 18
     assert all(
         source.approval_status == ApprovalStatus.APPROVED for source in sources
     )

@@ -12,10 +12,10 @@ from pookie_backend.api.dependencies import get_active_profile
 from pookie_backend.database import get_db_session
 from pookie_backend.models import (
     AiCallLog,
+    Job,
     JobEvaluation,
     JobFeedback,
     JobStatus,
-    Job,
     UserProfile,
 )
 

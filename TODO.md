@@ -106,9 +106,33 @@ Task format: `- [ ] \`T<n>\` <description> — <manual|agent>[, depends-on: T<a>
 
 Discovered during the T22/T23 end-to-end test (2026-09-07): the first live refresh pulled 246 jobs from 5 companies, only ~90 eng-titled, and the 25-per-run evaluation cap spends AI calls on obvious non-fits. These cut AI spend and improve coverage before real use.
 
-- [ ] `T38` Curate an expanded approved company/source list across Greenhouse, Lever, and Ashby — manual
+- [x] `T38` Curate an expanded approved company/source list across Greenhouse, Lever, and Ashby — manual
   - Done when: a reviewed list of target companies with board kind and board id exists (each board verified reachable), replacing the current 5-company test set.
-- [ ] `T39` Seed the expanded source list and prune dead boards — agent, complexity: simple, depends-on: T38
+  - Completed 2026-09-08: 14 companies added via Greenhouse/Ashby (Airbnb, Stripe, Coinbase, Roblox, Discord, Lyft, Asana, Datadog, LinkedIn, Dropbox, Twilio, DoorDash, Snowflake, Notion) plus 4 original smaller companies. 16 remaining companies need new adapters — see T41–T44.
+- [x] `T39` Seed the expanded source list and prune dead boards — agent, complexity: simple, depends-on: T38
   - Done when: new sources are seeded idempotently into `job_sources`, each fetches successfully through its adapter, and stale/unreachable boards (e.g. the 404-ing Greenhouse/Lever rows) are paused or removed.
-- [ ] `T40` Add profile-driven pre-evaluation eligibility filter (software-engineering roles, salary floor, allowed locations, seniority range) — agent, complexity: complex
+  - Completed 2026-09-08: 18 active approved sources seeded. Stale Lever/Greenhouse dupes from original test set remain paused.
+- [x] `T40` Add profile-driven pre-evaluation eligibility filter (software-engineering roles, salary floor, allowed locations, seniority range) — agent, complexity: complex
   - Done when: jobs failing the profile's target role families, salary floor, allowed locations, or seniority min/max skip AI evaluation without spending provider calls; filtered jobs are retained and visible with a skip reason rather than deleted; filter decisions are counted in crawl run reporting; tests cover each criterion and interplay with the evaluation cap.
+  - Completed 2026-09-08: eligibility.py filters on 4 criteria (engineering title, seniority below Senior, New York / remote / US-wide location, salary floor $170k). Integrated into evaluate_pending_jobs — filtered jobs are retained in DB but skip AI calls. EvaluationRunCounts.filtered tracks the count. 49 unit tests + 2 integration tests. Profile updated: allowed_locations=["New York, NY"], salary_floor=$170k, seniority_max=5.
+  - Updated 2026-09-08 (user review): Senior, DevOps, and SRE/site-reliability titles are now excluded too — seniority ceiling is below Senior; DevOps/SRE removed from the core role patterns and added to the non-engineering overrides. See decisions.md.
+
+## Additional source adapters
+
+Companies from the target list that don't use Greenhouse, Lever, or Ashby. Each needs a new adapter or integration approach.
+
+- [ ] `T41` Implement Workday source adapter — agent, complexity: complex
+  - Done when: a Workday adapter can fetch job postings via the `/wday/cxs/{tenant}/{site}/jobs` POST API, parse results into `RawPosting`s, and handle pagination; tested against at least one live Workday board.
+  - Covers: NVIDIA (`nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite`, 1714 jobs), Salesforce (`salesforce.wd12.myworkdayjobs.com/External_Career_Site`, 526 jobs). Also potentially Adobe and others once their Workday site names are discovered.
+- [ ] `T42` Implement Netflix source adapter — agent, complexity: medium
+  - Done when: a Netflix adapter can fetch job postings via `explore.jobs.netflix.net/api/apply/v2/jobs?domain=netflix.com`, parse results into `RawPosting`s, and handle pagination; tested with fixture data.
+  - API confirmed working: ~498 jobs, returns JSON with `positions` array.
+- [ ] `T43` Add NVIDIA and Salesforce as Workday sources — agent, complexity: simple, depends-on: T41
+  - Done when: NVIDIA and Salesforce are seeded as Workday sources, fetch successfully through the Workday adapter, and appear in the dashboard.
+- [ ] `T44` Add Netflix source — agent, complexity: simple, depends-on: T42
+  - Done when: Netflix is seeded as a source, fetches successfully through its adapter, and appears in the dashboard.
+- [ ] `T45` Research and implement aggregator API adapter for remaining companies — agent, complexity: complex
+  - Done when: an aggregator adapter (e.g. SerpApi Google Jobs) can fetch job postings by company name, parse results into `RawPosting`s, and is tested with at least one company.
+  - Covers remaining companies without direct API access: Google, Amazon, Microsoft, Apple, Adobe, Uber, Databricks, MongoDB, Atlassian, Oracle, Bloomberg, Spotify, Tesla, Snap, X (Twitter), Shopify.
+- [ ] `T46` Seed remaining companies via aggregator adapter — agent, complexity: simple, depends-on: T45
+  - Done when: all 16 remaining target companies are seeded as aggregator sources, fetch successfully, and appear in the dashboard.

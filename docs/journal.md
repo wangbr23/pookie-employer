@@ -95,3 +95,31 @@ Bugs found and fixed during the run:
 - Seed source list (uncommitted board swap from the previous session) had drifted from `test_seed.py` expectations; test updated alongside the commit.
 
 Known follow-ups: on-demand trigger's running-check can't see uncommitted in-flight crawls (concurrent POSTs race and 500 via raw-posting unique violation — hit during testing with duplicate triggers); evaluation phase has no time budget (~8 min per run, ~25 evals); remaining 196 evaluations drain ~25 per refresh.
+
+## 2026-09-08 — Tightened eligibility role gate + stored-job backfill
+
+Investigated why non-SWE roles (Senior Product Manager - Observability Data Platform, Senior Data Engineer, Engineering Compensation Partner) survived refresh filtering. Root cause: the role gate ran only in the evaluation phase and its regex allowlist matched generic terms — `\bplatform\b` matched the team suffix in the PM title, and `\bengineer` prefix-matched "Engineering" in the compensation title.
+
+- Rewrote `_is_software_role` in `eligibility.py`: a title now needs an explicit `software` + `engineer|developer` pairing, or a core software-family phrase adjacent to engineer/developer (backend, frontend, full stack, devops, site reliability, SDE/SWE/SRE). Generic `engineer`/`developer`/`platform`/`infrastructure` no longer qualify. Product decision: keep the backend/frontend/devops/SRE family (softer variant) — classic software titles without the word "software" still pass.
+- Added `make backfill` (`python -m pookie_backend.backfill`) to re-apply the eligibility filter to every stored rankable job with no AI calls; mirrors the evaluation loop's scope (never touches dismissed/closed-archived jobs, clears stale skip_reasons).
+- Ran the backfill against the dev DB: 3,086 of 3,262 jobs filtered (2,757 not_engineering_role, 191 location_mismatch, 137 seniority_too_high, 1 non_engineering_specialty), 176 remain visible. Verified the three leak titles now carry `not_engineering_role`.
+- Backend suite 282 passed, ruff clean. `make typecheck` still fails on 4 pre-existing `Result.rowcount` errors in `api/deletion.py` (present at HEAD, unrelated).
+
+## 2026-09-08 — Expanded approved source list and seeded it (T38/T39)
+
+Curated and seeded an expanded target-company list, recorded in TODO under T38/T39 (this session's journal entry was backfilled later — noted for honesty).
+
+- 14 large companies added via verified Greenhouse/Ashby boards: Airbnb, Stripe, Coinbase, Roblox, Discord, Lyft, Asana, Datadog, LinkedIn, Dropbox, Twilio, DoorDash, Snowflake, Notion — plus the 4 original smaller companies; 18 active approved sources seeded idempotently via `python -m pookie_backend.seed`.
+- 16 remaining target companies (Google, Amazon, Microsoft, Netflix, NVIDIA, Salesforce, etc.) need new adapters — Workday (T41), Netflix (T42), aggregator (T45); filed as T41–T46.
+- No crawl has run against the new sources yet (job count still 3,262 at the time of the next entry).
+
+## 2026-09-08 — Tightened seniority and removed DevOps/SRE from scope
+
+User review of live results ("DevOps Engineer (Observability)" surfaced) led to three filter tightenings in `eligibility.py`. This **supersedes the same-day decision above that kept the devops/SRE family** and the T40 note's "seniority ≤ Senior" — the ceiling is now below Senior.
+
+- Added `\bsenior\b` to `_OVER_SENIOR_PATTERNS` → `seniority_too_high`.
+- Removed `\bdevops\s+(?:engineer|developer)\b` from `_CORE_SOFTWARE_PATTERNS`; bare DevOps titles now fail the role gate, and `\bdevops\b` in `_NON_ENGINEERING_OVERRIDES` catches compounds ("Software DevOps Engineer" → `non_engineering_specialty`).
+- Same treatment for SRE: removed `\bsre\b` / `\bsite reliability\s+engineer\b` from core patterns; added `\bsre\b` + `\bsite reliability\b` to overrides.
+- Tests updated: Senior/DevOps/SRE pass-cases flipped to reject-cases; evaluation-test default title de-Senior'd; backfill test updated. Suite 287 passed.
+- Backfill rerun after each change; final state: 3,188 of 3,262 filtered (2,760 not_engineering_role, 314 seniority_too_high, 112 location_mismatch, 2 non_engineering_specialty), 74 visible (was 176 before this session).
+- decisions.md: appended a superseding entry for the narrowed role/seniority scope.

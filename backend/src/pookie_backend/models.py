@@ -430,6 +430,7 @@ class Job(Base):
         enum_type(JobStatus), nullable=False, default=JobStatus.NEW
     )
     fit_bucket: Mapped[FitBucket | None] = mapped_column(enum_type(FitBucket))
+    skip_reason: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

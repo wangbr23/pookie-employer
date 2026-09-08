@@ -1,4 +1,4 @@
-.PHONY: install dev run test lint format typecheck seed alembic-help alembic-current alembic-revision alembic-upgrade alembic-downgrade help
+.PHONY: install dev run test lint format typecheck seed backfill alembic-help alembic-current alembic-revision alembic-upgrade alembic-downgrade help
 
 VENV = venv
 SYSTEM_PYTHON = python3
@@ -21,6 +21,7 @@ help:
 	@echo "  make format          - format code with black and isort"
 	@echo "  make typecheck       - run mypy type checking"
 	@echo "  make seed            - seed the database with an initial profile and sources"
+	@echo "  make backfill        - re-apply the eligibility filter to stored jobs"
 	@echo "  make alembic-help    - show alembic help"
 	@echo "  make alembic-current - show current database revision"
 	@echo "  make alembic-revision - create a new migration revision"
@@ -54,6 +55,9 @@ typecheck:
 
 seed:
 	$(PYTHON) -m pookie_backend.seed
+
+backfill:
+	$(PYTHON) -m pookie_backend.backfill
 
 alembic-help:
 	$(PYTHON) -m alembic --help

@@ -24,11 +24,11 @@ SEED_PROFILE_VALUES = {
     "owner_user_id": SEED_OWNER_USER_ID,
     "target_role_families": ["backend engineering", "platform engineering"],
     "seniority_min": 2,
-    "seniority_max": 6,
+    "seniority_max": 5,
     "remote_preference": "remote_or_hybrid",
-    "allowed_locations": ["United States", "New York, NY", "San Francisco, CA"],
+    "allowed_locations": ["New York, NY"],
     "work_authorization_constraints": ["authorized to work in the United States"],
-    "salary_floor": Decimal("180000.00"),
+    "salary_floor": Decimal("170000.00"),
     "preferred_tech": [
         "Python",
         "TypeScript",
@@ -67,6 +67,35 @@ class SeedSource(TypedDict):
 
 
 SEED_SOURCES: Sequence[SeedSource] = (
+    # --- Greenhouse boards (verified reachable 2026-09-08) ---
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Airbnb Careers",
+        "company_name": "Airbnb",
+        "base_url": "https://boards.greenhouse.io/airbnb",
+        "external_board_id": "airbnb",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Stripe Careers",
+        "company_name": "Stripe",
+        "base_url": "https://boards.greenhouse.io/stripe",
+        "external_board_id": "stripe",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Coinbase Careers",
+        "company_name": "Coinbase",
+        "base_url": "https://boards.greenhouse.io/coinbase",
+        "external_board_id": "coinbase",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Roblox Careers",
+        "company_name": "Roblox",
+        "base_url": "https://boards.greenhouse.io/roblox",
+        "external_board_id": "roblox",
+    },
     {
         "kind": SourceKind.GREENHOUSE,
         "name": "Discord Careers",
@@ -74,6 +103,71 @@ SEED_SOURCES: Sequence[SeedSource] = (
         "base_url": "https://boards.greenhouse.io/discord",
         "external_board_id": "discord",
     },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Lyft Careers",
+        "company_name": "Lyft",
+        "base_url": "https://boards.greenhouse.io/lyft",
+        "external_board_id": "lyft",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Asana Careers",
+        "company_name": "Asana",
+        "base_url": "https://boards.greenhouse.io/asana",
+        "external_board_id": "asana",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Datadog Careers",
+        "company_name": "Datadog",
+        "base_url": "https://boards.greenhouse.io/datadog",
+        "external_board_id": "datadog",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "LinkedIn Careers",
+        "company_name": "LinkedIn",
+        "base_url": "https://boards.greenhouse.io/linkedin",
+        "external_board_id": "linkedin",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Dropbox Careers",
+        "company_name": "Dropbox",
+        "base_url": "https://boards.greenhouse.io/dropbox",
+        "external_board_id": "dropbox",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Twilio Careers",
+        "company_name": "Twilio",
+        "base_url": "https://boards.greenhouse.io/twilio",
+        "external_board_id": "twilio",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "DoorDash Careers",
+        "company_name": "DoorDash",
+        "base_url": "https://boards.greenhouse.io/doordashusa",
+        "external_board_id": "doordashusa",
+    },
+    # --- Ashby boards (verified reachable 2026-09-08) ---
+    {
+        "kind": SourceKind.ASHBY,
+        "name": "Snowflake Careers",
+        "company_name": "Snowflake",
+        "base_url": "https://jobs.ashbyhq.com/snowflake",
+        "external_board_id": "snowflake",
+    },
+    {
+        "kind": SourceKind.ASHBY,
+        "name": "Notion Careers",
+        "company_name": "Notion",
+        "base_url": "https://jobs.ashbyhq.com/notion",
+        "external_board_id": "notion",
+    },
+    # --- Smaller companies (original test sources) ---
     {
         "kind": SourceKind.GREENHOUSE,
         "name": "Airtable Careers",

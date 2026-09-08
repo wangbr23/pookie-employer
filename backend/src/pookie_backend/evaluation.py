@@ -19,6 +19,7 @@ from pookie_backend.ai.interface import (
     AIProfileSnapshot,
     AIService,
 )
+from pookie_backend.eligibility import check_eligibility
 from pookie_backend.models import (
     FitBucket,
     Job,
@@ -48,6 +49,7 @@ class EvaluationRunCounts:
     evaluated: int
     reused: int
     pending: int
+    filtered: int = 0
 
 
 def job_content_hash(job: Job) -> str:
@@ -96,8 +98,17 @@ def evaluate_pending_jobs(
         .order_by(Job.first_seen_at.desc(), Job.id)
     ).all()
 
-    evaluated = reused = pending = 0
+    evaluated = reused = pending = filtered = 0
     for job in jobs:
+        skip_reason = check_eligibility(job, profile)
+        if skip_reason is not None:
+            job.skip_reason = skip_reason
+            filtered += 1
+            continue
+
+        if job.skip_reason is not None:
+            job.skip_reason = None
+
         content_hash = job_content_hash(job)
         existing = _find_evaluation(session, profile, job, content_hash)
         is_current = existing is not None and _is_current(existing, profile)
@@ -109,7 +120,9 @@ def evaluate_pending_jobs(
             evaluated += 1
         else:
             reused += 1
-    return EvaluationRunCounts(evaluated=evaluated, reused=reused, pending=pending)
+    return EvaluationRunCounts(
+        evaluated=evaluated, reused=reused, pending=pending, filtered=filtered
+    )
 
 
 def _is_current(evaluation: JobEvaluation, profile: UserProfile) -> bool:

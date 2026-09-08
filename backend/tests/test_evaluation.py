@@ -59,7 +59,7 @@ def add_profile(session: Session, *, consented: bool = True) -> UserProfile:
 def add_job(
     session: Session,
     *,
-    title: str = "Senior Python Backend Engineer",
+    title: str = "Python Backend Engineer",
     company: str = "Astral",
     location: str = "Remote (US)",
     remote_policy: str = RemotePolicy.REMOTE.value,
@@ -358,3 +358,33 @@ def test_the_dashboard_api_serves_the_stored_evaluation(
         detail["evaluation"]["verify_before_applying"]
     )
     assert [item["id"] for item in listed["items"]] == [str(job.id)]
+
+
+def test_eligibility_filter_skips_ineligible_jobs(db_session: Session):
+    """Non-engineering roles and over-senior titles are filtered without AI calls."""
+    profile = add_profile(db_session)
+    add_job(db_session, title="Software Engineer", location="Remote (US)")
+    add_job(db_session, title="Product Manager", location="Remote (US)")
+    add_job(db_session, title="Staff Software Engineer", location="Remote (US)")
+
+    counts = evaluate_pending_jobs(db_session, make_service(db_session), profile)
+
+    assert counts.evaluated == 1
+    assert counts.filtered == 2
+    assert counts.pending == 0
+    assert db_session.scalar(select(func.count()).select_from(JobEvaluation)) == 1
+
+
+def test_eligibility_filter_does_not_count_against_cap(db_session: Session):
+    """Filtered jobs leave more of the evaluation cap for eligible ones."""
+    profile = add_profile(db_session)
+    add_job(db_session, title="Backend Engineer 1", location="Remote (US)")
+    add_job(db_session, title="Backend Engineer 2", location="Remote (US)")
+    add_job(db_session, title="Product Manager", location="Remote (US)")
+    add_job(db_session, title="Data Analyst", location="Remote (US)")
+
+    counts = evaluate_pending_jobs(
+        db_session, make_service(db_session), profile, limit=2
+    )
+
+    assert counts == EvaluationRunCounts(evaluated=2, reused=0, pending=0, filtered=2)

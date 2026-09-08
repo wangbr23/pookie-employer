@@ -101,3 +101,23 @@ Append-only log of architecture decisions. One entry per decision, newest at the
 **Decision:** The seed command will use `owner_user_id` as the natural idempotency key for the profile and a lookup-before-insert pattern keyed on `(kind, company_name, external_board_id)` for each source. No new migration is added for this task.
 
 **Consequences:** Seeding remains simple and reversible while preserving repeated-run safety. If source identity rules change later, the seed logic will need to be updated in tandem with any future uniqueness constraint.
+
+## 2026-09-08 — Eligibility role gate requires an explicit software-title match
+
+**Status:** Accepted
+
+**Context:** The original allowlist matched generic terms (`\bengineer`, `\bdeveloper`, `\bplatform`, `\binfrastructure`), which let non-software-engineering roles through refresh filtering: "Senior Product Manager - Observability Data Platform" (matched `platform`), "Senior Data Engineer" (matched `engineer`), and "Engineering Compensation Partner" (`\bengineer` prefix-matches "Engineering").
+
+**Decision:** A title passes the role gate only if it pairs `software` with `engineer`/`developer`, or matches a core software-family phrase adjacent to engineer/developer (backend, frontend, full stack, devops, site reliability, SDE/SWE/SRE abbreviations). A stricter "must literally contain software" variant was rejected: it would also filter classic software titles like "Backend Engineer", "Frontend Engineer", and "DevOps Engineer". The non-engineering override list is kept as a second layer for gate-passing compounds like "Software Sales Engineer".
+
+**Consequences:** Data/security/platform/infrastructure engineering roles are filtered deterministically before AI evaluation. Management and specialty titles that no longer pass the role gate report `not_engineering_role` instead of `seniority_too_high`/`non_engineering_specialty`. `make backfill` exists to re-apply future filter changes to stored jobs without AI calls.
+
+## 2026-09-08 — Senior, DevOps, and SRE titles excluded from results
+
+**Status:** Accepted — supersedes the role-family scope of "Eligibility role gate requires an explicit software-title match" (same day), which kept the devops/SRE family and allowed Senior titles.
+
+**Context:** Live-results review surfaced "DevOps Engineer (Observability)" and Senior-titled roles the user does not want. The profile is targeting individual-contributor software product roles (backend/frontend/full-stack), not infrastructure/operations or Senior-level positions.
+
+**Decision:** `\bsenior\b` moved into `_OVER_SENIOR_PATTERNS` (seniority ceiling is now below Senior). DevOps and SRE/site-reliability removed from `_CORE_SOFTWARE_PATTERNS`; bare DevOps/SRE titles fail the role gate (`not_engineering_role`), and `\bdevops\b`, `\bsre\b`, `\bsite reliability\b` were added to `_NON_ENGINEERING_OVERRIDES` so gate-passing compounds (e.g. "Software DevOps Engineer") report `non_engineering_specialty`. The stricter "must literally contain software" variant remains rejected — "Backend Engineer" and "Frontend Engineer" still pass.
+
+**Consequences:** DevOps/SRE/infra-adjacent and all Senior+ IC roles are filtered before AI evaluation; stored jobs re-filtered via `make backfill` (3,188 of 3,262 filtered, 74 visible). If the user later wants DevOps or Senior roles back, re-adding the core patterns and rerunning the backfill restores them (0 restored in the last run means filtered jobs are recoverable, not deleted).
