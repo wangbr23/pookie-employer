@@ -174,7 +174,7 @@ class TestOpenRouterProvider:
 
     def test_cost_from_usage(self) -> None:
         body = _success_body()
-        body["usage"]["total_cost"] = 0.000123
+        body["usage"]["cost"] = 0.000123
         provider = _provider_with_transport(_mock_transport(body))
 
         provider.evaluate_job(_make_request())

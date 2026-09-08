@@ -117,7 +117,10 @@ class OpenRouterProvider:
                 },
             ],
             "temperature": 0.0,
-            "max_tokens": 512,
+            # Reasoning models (e.g. z-ai glm) spend completion tokens on
+            # internal reasoning before the JSON answer; a tight cap makes
+            # them return `content: null`.
+            "max_tokens": 2048,
         }
         response = self._client.post(
             _COMPLETIONS_URL,
@@ -133,6 +136,11 @@ class OpenRouterProvider:
         self.last_usage = _extract_usage(body)
 
         content = body["choices"][0]["message"]["content"]
+        if not content or not content.strip():
+            raise ValueError(
+                "Provider returned empty content; the model likely spent its "
+                "entire token budget on reasoning without answering"
+            )
         parsed = _parse_response(content)
 
         fit_bucket = parsed.get("fit_bucket", "needs_review")
@@ -152,7 +160,8 @@ def _extract_usage(body: dict[str, Any]) -> ProviderUsage:
     usage = body.get("usage", {})
     input_tokens = usage.get("prompt_tokens")
     output_tokens = usage.get("completion_tokens")
-    cost = body.get("usage", {}).get("total_cost")
+    # OpenRouter reports spend as usage.cost (dollars), not total_cost.
+    cost = usage.get("cost")
     if cost is None:
         cost = body.get("cost")
     return ProviderUsage(

@@ -84,3 +84,14 @@ Replaced the static mock dashboard with two real data-driven views backed by the
 - Sidebar navigation switches between views client-side, shows live count badges; Saved/Dismissed/Debug remain placeholder (T27/T29 scope).
 - Mobile header with compact tab bar for For You / All Jobs.
 - Verified with seeded test data: grouping, search filtering, bucket filtering, pagination counter, and empty states all work. Lint, typecheck, and build pass clean.
+
+## 2026-09-07 — T22/T23 end-to-end verification run
+
+Ran the first live end-to-end refresh (fetch → normalize → dedupe → real OpenRouter evaluation). Two committed successful crawl runs: 5/5 sources succeeded (Airtable 16, Linear 29, Discord 48, Ramp 142, Resend 11 postings), 246 jobs stored, second run re-discovered all 246 with 0 inserts (dedupe verified), 50 real AI evaluations stored (openrouter / z-ai/glm-5.3-flash, 11091 in / 48228 out tokens), 196 evaluations still pending behind the per-run cap of 25.
+
+Bugs found and fixed during the run:
+- OpenRouter provider crashed with `AttributeError: None.strip()` when the glm model returned `content: null` — reasoning models can exhaust a tight `max_tokens` on reasoning alone. Raised to 2048 and added an explicit empty-content guard.
+- `_extract_usage` read `usage.total_cost`/`body.cost`, but OpenRouter sends `usage.cost`, so estimated cost was never recorded. Fixed; the cost test now matches the real response shape.
+- Seed source list (uncommitted board swap from the previous session) had drifted from `test_seed.py` expectations; test updated alongside the commit.
+
+Known follow-ups: on-demand trigger's running-check can't see uncommitted in-flight crawls (concurrent POSTs race and 500 via raw-posting unique violation — hit during testing with duplicate triggers); evaluation phase has no time budget (~8 min per run, ~25 evals); remaining 196 evaluations drain ~25 per refresh.
