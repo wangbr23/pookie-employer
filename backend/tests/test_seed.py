@@ -70,6 +70,5 @@ def test_seed_database_creates_expected_profile_and_sources(db_session: Session)
     )
     assert {source.kind for source in sources} == {
         SourceKind.GREENHOUSE,
-        SourceKind.LEVER,
         SourceKind.ASHBY,
     }
