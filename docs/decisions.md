@@ -121,3 +121,23 @@ Append-only log of architecture decisions. One entry per decision, newest at the
 **Decision:** `\bsenior\b` moved into `_OVER_SENIOR_PATTERNS` (seniority ceiling is now below Senior). DevOps and SRE/site-reliability removed from `_CORE_SOFTWARE_PATTERNS`; bare DevOps/SRE titles fail the role gate (`not_engineering_role`), and `\bdevops\b`, `\bsre\b`, `\bsite reliability\b` were added to `_NON_ENGINEERING_OVERRIDES` so gate-passing compounds (e.g. "Software DevOps Engineer") report `non_engineering_specialty`. The stricter "must literally contain software" variant remains rejected — "Backend Engineer" and "Frontend Engineer" still pass.
 
 **Consequences:** DevOps/SRE/infra-adjacent and all Senior+ IC roles are filtered before AI evaluation; stored jobs re-filtered via `make backfill` (3,188 of 3,262 filtered, 74 visible). If the user later wants DevOps or Senior roles back, re-adding the core patterns and rerunning the backfill restores them (0 restored in the last run means filtered jobs are recoverable, not deleted).
+
+## 2026-09-08 — Cover remaining target companies with direct adapters; paid aggregator rejected
+
+**Status:** Accepted (T45 research; see docs/designs/2026-09-08-remaining-companies-adapters.md)
+
+**Context:** 16 target companies have no source. T45 originally assumed an aggregator adapter (e.g. SerpApi Google Jobs, ~$75/mo for 5k searches). Probing on 2026-09-08 showed Databricks and MongoDB are on Greenhouse (existing adapter), Adobe is on Phenom People (same platform family as the Netflix adapter), Amazon and Apple expose reachable listing APIs, and the rest need dev-machine verification because plain fetches are bot-blocked.
+
+**Decision:** Option A — direct per-company/ATS adapters, no recurring paid dependency. Databricks + MongoDB seed via the existing Greenhouse adapter (T45); a Phenom adapter clones the Netflix pattern for Adobe (T46/T48); dedicated adapters for Amazon `search.json` (T50) and Apple `role/search` (T51), seeded together (T52); remaining backends verified from a dev machine before more adapter tasks (T49). SerpApi, free aggregators (Adzuna/The Muse), and headless-browser scraping are all rejected for now.
+
+**Consequences:** Best data quality (official postings, stable apply URLs, clean dedupe) at the cost of building/maintaining one adapter per company/ATS. Google (no public API) and scraper-hostile sites (X, Bloomberg) stay uncovered unless the user later approves scraping or reconsiders an aggregator. Adapter tasks are serialized (each adds a SourceKind enum value + migration + dispatch branch + frontend union value in the same files).
+
+## 2026-09-08 — Amazon dropped from the target company list
+
+**Status:** Accepted (amends "Cover remaining target companies with direct adapters", same day)
+
+**Context:** The T45 research plan included a dedicated Amazon adapter (planned as T50) built on the verified `amazon.jobs/en/search.json` API.
+
+**Decision:** The user removed Amazon from the target list before the task started. T50's id is retired and never reused; the remaining chain is T46 (Phenom adapter) → T48 (seed Adobe), T46 → T51 (Apple adapter) → T52 (seed Apple), with T45 (Greenhouse seeds) and T49 (backend verification) parallel-ready.
+
+**Consequences:** Amazon postings will not appear in the dashboard. The probing findings stay in the research doc, so re-adding Amazon later is just a new adapter/seed task.

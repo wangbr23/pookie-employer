@@ -119,7 +119,7 @@ Discovered during the T22/T23 end-to-end test (2026-09-07): the first live refre
 
 ## Additional source adapters
 
-Companies from the target list that don't use Greenhouse, Lever, or Ashby. Each needs a new adapter or integration approach.
+Remaining target companies after the Greenhouse/Lever/Ashby/Workday/Netflix adapters. Decision (2026-09-08, T45 research): direct per-company/ATS adapters, no paid aggregator — see docs/designs/2026-09-08-remaining-companies-adapters.md. Adapter tasks are serialized behind T46 because each adds a `SourceKind` enum value + migration + dispatch branch + frontend union value (same files).
 
 - [x] `T41` Implement Workday source adapter — agent, complexity: complex
   - Done when: a Workday adapter can fetch job postings via the `/wday/cxs/{tenant}/{site}/jobs` POST API, parse results into `RawPosting`s, and handle pagination; tested against at least one live Workday board.
@@ -135,8 +135,23 @@ Companies from the target list that don't use Greenhouse, Lever, or Ashby. Each 
 - [x] `T44` Add Netflix source — agent, complexity: simple, depends-on: T42
   - Done when: Netflix is seeded as a source, fetches successfully through its adapter, and appears in the dashboard.
   - Completed 2026-09-08: seeded via `seed.py` (21 approved sources, idempotent; seed test count bumped to 21 + NETFLIX kind). Live refresh ran 20/21 sources succeeded (Datadog timed out — transient, unrelated); Netflix fetched 496 postings, 494 canonical after dedupe. Eligibility triage: 429 not_engineering_role / 8 location_mismatch / 6 seniority_too_high / 1 non_engineering_specialty / 50 eligible; 25 eligible jobs evaluated in this run's cap (two `strong` fits, rest mostly `needs_review` — Netflix list API supplies no descriptions). Dashboard API returns all 50 eligible Netflix jobs with apply links.
-- [ ] `T45` Research and implement aggregator API adapter for remaining companies — agent, complexity: complex
-  - Done when: an aggregator adapter (e.g. SerpApi Google Jobs) can fetch job postings by company name, parse results into `RawPosting`s, and is tested with at least one company.
-  - Covers remaining companies without direct API access: Google, Amazon, Microsoft, Apple, Adobe, Uber, Databricks, MongoDB, Atlassian, Oracle, Bloomberg, Spotify, Tesla, Snap, X (Twitter), Shopify.
-- [ ] `T46` Seed remaining companies via aggregator adapter — agent, complexity: simple, depends-on: T45
-  - Done when: all 16 remaining target companies are seeded as aggregator sources, fetch successfully, and appear in the dashboard.
+- [ ] `T45` Seed Databricks and MongoDB as Greenhouse sources — agent, complexity: simple, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: both companies are seeded idempotently via seed.py as Greenhouse sources, fetch through the existing Greenhouse adapter in a live refresh, and appear in the dashboard with apply links.
+  - Boards verified reachable 2026-09-08: boards-api.greenhouse.io/databricks, /mongodb.
+- [ ] `T46` Implement Phenom source adapter — agent, complexity: complex, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter clones the Netflix adapter pattern (paginate the `/api/apply/v2/jobs` API), adds `SourceKind.PHENOM` with migration and frontend union value, fixture-backed tests pass, and one live Phenom board (Adobe's tenant) is verified end to end.
+  - Adobe confirmed Phenom 2026-09-08 (careers.adobe.com). The tenant/domain request parameter must be discovered during implementation. Spotify/Uber/Shopify are suspected Phenom — verify via T49 before seeding them.
+- [ ] `T48` Add Adobe as Phenom source — agent, complexity: simple, depends-on: T45, T46, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: Adobe is seeded idempotently via seed.py, fetches successfully through the Phenom adapter in a live refresh, and appears in the dashboard with apply links.
+- [ ] `T49` Verify careers-site backends for remaining companies — agent, complexity: simple, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: for each of Spotify, Microsoft, Tesla, Uber, Snap, X, Bloomberg, Atlassian, Oracle, Shopify the ATS backend and a working listing API are identified (or confirmed absent) using a real browser network tab or curl from a dev machine — plain fetches are bot-blocked for several — and findings are recorded in the research doc.
+- [ ] `T51` Implement Apple source adapter — agent, complexity: complex, depends-on: T46, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter fetches Apple postings via the `jobs.apple.com` JSON API (or server-rendered search page as fallback) with pagination into `RawPosting`s, fixture-backed tests pass, and one live fetch is verified. Descriptions are available — prefer the API path.
+- [ ] `T52` Add Apple as a source — agent, complexity: simple, depends-on: T48, T51, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: Apple is seeded idempotently via seed.py, fetches successfully through its adapter in a live refresh, and appears in the dashboard with apply links.
+  - Note: T50 (Amazon adapter) was removed from scope by user decision on 2026-09-08 before it started; its id is retired and never reused.
+
+## Discovered follow-ups
+
+- [ ] `T47` Investigate crawl-run AI call/cost rollup showing 0 — agent, complexity: simple
+  - Done when: the 2026-09-08 T44 refresh recorded 25 evaluations but `ai_call_count: 0` / `estimated_ai_cost: null` on the crawl run; find where evaluation-phase AI usage should be attributed to the crawl run (or document why it is only on evaluation records) and fix/report accordingly.
