@@ -152,6 +152,20 @@ SEED_SOURCES: Sequence[SeedSource] = (
         "base_url": "https://boards.greenhouse.io/doordashusa",
         "external_board_id": "doordashusa",
     },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "Databricks Careers",
+        "company_name": "Databricks",
+        "base_url": "https://boards.greenhouse.io/databricks",
+        "external_board_id": "databricks",
+    },
+    {
+        "kind": SourceKind.GREENHOUSE,
+        "name": "MongoDB Careers",
+        "company_name": "MongoDB",
+        "base_url": "https://boards.greenhouse.io/mongodb",
+        "external_board_id": "mongodb",
+    },
     # --- Ashby boards (verified reachable 2026-09-08) ---
     {
         "kind": SourceKind.ASHBY,
