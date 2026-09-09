@@ -38,5 +38,8 @@ htmlcov/
 .vscode/
 .idea/
 
+# Playwright MCP session artifacts
+.playwright-mcp/
+
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
