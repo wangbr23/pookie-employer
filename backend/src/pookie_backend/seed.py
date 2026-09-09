@@ -182,6 +182,14 @@ SEED_SOURCES: Sequence[SeedSource] = (
         "base_url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site",
         "external_board_id": "salesforce/External_Career_Site",
     },
+    # --- Netflix (verified reachable 2026-09-08) ---
+    {
+        "kind": SourceKind.NETFLIX,
+        "name": "Netflix Jobs",
+        "company_name": "Netflix",
+        "base_url": "https://explore.jobs.netflix.net",
+        "external_board_id": "netflix.com",
+    },
     # --- Smaller companies (original test sources) ---
     {
         "kind": SourceKind.GREENHOUSE,

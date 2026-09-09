@@ -123,3 +123,11 @@ User review of live results ("DevOps Engineer (Observability)" surfaced) led to 
 - Tests updated: Senior/DevOps/SRE pass-cases flipped to reject-cases; evaluation-test default title de-Senior'd; backfill test updated. Suite 287 passed.
 - Backfill rerun after each change; final state: 3,188 of 3,262 filtered (2,760 not_engineering_role, 314 seniority_too_high, 112 location_mismatch, 2 non_engineering_specialty), 74 visible (was 176 before this session).
 - decisions.md: appended a superseding entry for the narrowed role/seniority scope.
+
+## 2026-09-08 — T44: Netflix added as a live source
+
+Seeded Netflix (kind `netflix`, board `netflix.com` at `explore.jobs.netflix.net`) via `seed.py` — 21 approved sources now. Seed test updated (count 21, `SourceKind.NETFLIX` in the kind set). Suite 337 passed; ruff clean on touched files (6 pre-existing I001 errors remain in alembic versions).
+
+Live refresh through the API: 20/21 sources succeeded (Datadog timed out — transient, unrelated). Netflix fetched 496 postings / 494 canonical. Triage: 429 not_engineering_role, 8 location_mismatch, 6 seniority_too_high, 1 non_engineering_specialty, 50 eligible. The run's 25-eval cap went to Netflix jobs: two `strong` fits (Data and Feature Infrastructure / Training Platform, both AI Platform), rest mostly `needs_review` since Netflix's list API omits descriptions (same known limit as Workday).
+
+Noted but not fixed: the crawl run rollup reported `ai_call_count: 0` / `estimated_ai_cost: null` despite 25 real evaluations — evaluation-phase AI usage may not be attributed to the crawl run. Worth a follow-up investigation.
