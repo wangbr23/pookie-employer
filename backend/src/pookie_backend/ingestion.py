@@ -7,10 +7,11 @@ from hashlib import sha256
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from pookie_backend.models import (
+    AiCallLog,
     CrawlRun,
     CrawlStatus,
     CrawlTrigger,
@@ -211,5 +212,31 @@ def rollup_crawl_run(session: Session, crawl_run_id: UUID) -> CrawlRun:
         else:
             crawl_run.status = CrawlStatus.SUCCESS
         crawl_run.finished_at = datetime.now().astimezone()
+    session.flush()
+    return crawl_run
+
+
+def rollup_crawl_run_ai_usage(session: Session, crawl_run_id: UUID) -> CrawlRun:
+    """Copy this crawl's evaluation-phase AI usage onto the crawl run.
+
+    Counts every provider attempt (including failures) attributed to the
+    crawl via ``AiCallLog.crawl_run_id``; recomputing from scratch keeps the
+    rollup idempotent. Mock providers record no cost, so the sum stays null.
+    """
+    crawl_run = session.get(CrawlRun, crawl_run_id)
+    if crawl_run is None:
+        raise ValueError(f"Crawl run {crawl_run_id} does not exist")
+
+    # Sessions run with autoflush=False, so unflushed call-log rows would be
+    # invisible to the aggregate below.
+    session.flush()
+    totals = session.execute(
+        select(
+            func.coalesce(func.sum(AiCallLog.call_count), 0),
+            func.coalesce(func.sum(AiCallLog.estimated_cost), 0),
+        ).where(AiCallLog.crawl_run_id == crawl_run_id)
+    ).one()
+    crawl_run.ai_call_count = totals[0]
+    crawl_run.estimated_ai_cost = totals[1] or None
     session.flush()
     return crawl_run

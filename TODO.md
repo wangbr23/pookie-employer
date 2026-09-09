@@ -155,5 +155,6 @@ Remaining target companies after the Greenhouse/Lever/Ashby/Workday/Netflix adap
 
 ## Discovered follow-ups
 
-- [ ] `T47` Investigate crawl-run AI call/cost rollup showing 0 — agent, complexity: simple
+- [x] `T47` Investigate crawl-run AI call/cost rollup showing 0 — agent, complexity: simple
   - Done when: the 2026-09-08 T44 refresh recorded 25 evaluations but `ai_call_count: 0` / `estimated_ai_cost: null` on the crawl run; find where evaluation-phase AI usage should be attributed to the crawl run (or document why it is only on evaluation records) and fix/report accordingly.
+  - Completed 2026-09-09: root cause — `AIService.evaluate_job` created `AiCallLog` rows without `crawl_run_id`, and nothing ever wrote `CrawlRun.ai_call_count`/`estimated_ai_cost` (schema existed, fields stayed at default). Fix: `crawl_run_id` keyword threaded from `run_refresh` → `evaluate_pending_jobs` → `_evaluate` → `AIService.evaluate_job` so every call log row is attributed to its crawl; new `rollup_crawl_run_ai_usage()` in ingestion.py sums `call_count`/`estimated_cost` over that crawl's rows onto the `CrawlRun` (recompute-from-scratch → idempotent, counts failed attempts, mock provider cost stays null). Sessions use `autoflush=False` (app + tests), so the rollup flushes before aggregating. Tests: attribution asserted in test_ai_interface/test_refresh; 2 new ingestion rollup tests. Suite 358 passed; ruff clean (alembic I001s pre-existing); mypy clean on touched files (4 pre-existing rowcount errors in api/deletion.py).

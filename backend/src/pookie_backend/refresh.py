@@ -37,6 +37,7 @@ from pookie_backend.ingestion import (
     create_crawl_run,
     create_source_run,
     finish_source_run,
+    rollup_crawl_run_ai_usage,
     upsert_raw_posting,
 )
 from pookie_backend.models import (
@@ -76,7 +77,14 @@ class SourceFetchResult:
 def _fetch_source(source: JobSource, timeout: float) -> SourceFetchResult:
     """Call the right adapter for *source* and return a uniform result."""
     kind = source.kind
-    r: GreenhouseResult | LeverResult | AshbyResult | WorkdayResult | NetflixResult | PhenomResult
+    r: (
+        GreenhouseResult
+        | LeverResult
+        | AshbyResult
+        | WorkdayResult
+        | NetflixResult
+        | PhenomResult
+    )
     if kind == SourceKind.GREENHOUSE:
         r = fetch_greenhouse_postings(source, timeout=timeout)
     elif kind == SourceKind.LEVER:
@@ -230,9 +238,7 @@ def run_refresh(
             failed += 1
             continue
 
-        counts = _persist_normalize_dedupe(
-            session, source_run, source, result.postings
-        )
+        counts = _persist_normalize_dedupe(session, source_run, source, result.postings)
         total_discovered += counts.discovered
         total_new += counts.new
         total_updated += counts.updated
@@ -250,10 +256,15 @@ def run_refresh(
         provider = ai_provider if ai_provider is not None else create_provider()
         ai_service = AIService(provider, session)
         evaluation_counts = evaluate_pending_jobs(
-            session, ai_service, profile, limit=evaluation_cap
+            session,
+            ai_service,
+            profile,
+            limit=evaluation_cap,
+            crawl_run_id=crawl_run.id,
         )
         crawl_run.evaluations_completed = evaluation_counts.evaluated
         crawl_run.evaluations_pending = evaluation_counts.pending
+        rollup_crawl_run_ai_usage(session, crawl_run.id)
 
     elapsed = time.monotonic() - wall_start
     crawl_run.elapsed_milliseconds = int(elapsed * 1000)
@@ -321,9 +332,7 @@ def _persist_normalize_dedupe(
     )
 
 
-def _finalize_crawl_status(
-    crawl_run: CrawlRun, succeeded: int, failed: int
-) -> None:
+def _finalize_crawl_status(crawl_run: CrawlRun, succeeded: int, failed: int) -> None:
     """Set the terminal status on a crawl run."""
     if failed and succeeded:
         crawl_run.status = CrawlStatus.PARTIAL_SUCCESS

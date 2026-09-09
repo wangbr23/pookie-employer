@@ -68,12 +68,14 @@ def test_consented_provider_call_proceeds_and_records_metadata():
         ai_consent_provider="test-provider",
         ai_consent_model_family="test-model",
     )
+    crawl_run_id = uuid4()
     session = Session()
     service = AIService(FakeProvider(), session)
 
-    result = service.evaluate_job(profile, make_request())
+    result = service.evaluate_job(profile, make_request(), crawl_run_id=crawl_run_id)
 
     assert result.fit_bucket == "possible"
     call = next(iter(session.new))
     assert call.provider == "test-provider"
     assert call.model_name == "test-model-v1"
+    assert call.crawl_run_id == crawl_run_id

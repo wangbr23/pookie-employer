@@ -8,6 +8,7 @@ are derived here, and only the judgement call is delegated to a provider.
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Literal
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -69,12 +70,19 @@ def job_content_hash(job: Job) -> str:
 
 
 def evaluate_job(
-    session: Session, service: AIService, profile: UserProfile, job: Job
+    session: Session,
+    service: AIService,
+    profile: UserProfile,
+    job: Job,
+    *,
+    crawl_run_id: UUID | None = None,
 ) -> tuple[JobEvaluation, EvaluationChangeKind]:
     """Return this job's current evaluation, calling the provider only if needed."""
     content_hash = job_content_hash(job)
     existing = _find_evaluation(session, profile, job, content_hash)
-    return _evaluate(session, service, profile, job, content_hash, existing)
+    return _evaluate(
+        session, service, profile, job, content_hash, existing, crawl_run_id
+    )
 
 
 def evaluate_pending_jobs(
@@ -83,11 +91,13 @@ def evaluate_pending_jobs(
     profile: UserProfile,
     *,
     limit: int = DEFAULT_EVALUATION_LIMIT,
+    crawl_run_id: UUID | None = None,
 ) -> EvaluationRunCounts:
     """Rank the newest unevaluated jobs, leaving the rest reported as pending.
 
     The cap counts provider calls only: reusing a cached evaluation is free, so
-    it never consumes budget a new job could have used.
+    it never consumes budget a new job could have used. Provider calls are
+    logged against *crawl_run_id* when one is supplied.
     """
     if limit < 0:
         raise ValueError("Evaluation limit cannot be negative")
@@ -115,7 +125,9 @@ def evaluate_pending_jobs(
         if not is_current and evaluated >= limit:
             pending += 1
             continue
-        _, change = _evaluate(session, service, profile, job, content_hash, existing)
+        _, change = _evaluate(
+            session, service, profile, job, content_hash, existing, crawl_run_id
+        )
         if change == "evaluated":
             evaluated += 1
         else:
@@ -137,12 +149,15 @@ def _evaluate(
     job: Job,
     content_hash: str,
     existing: JobEvaluation | None,
+    crawl_run_id: UUID | None = None,
 ) -> tuple[JobEvaluation, EvaluationChangeKind]:
     """Call the provider unless the cached evaluation is still current."""
     if existing is not None and _is_current(existing, profile):
         return existing, "reused"
 
-    result = service.evaluate_job(profile, _build_request(profile, job, content_hash))
+    result = service.evaluate_job(
+        profile, _build_request(profile, job, content_hash), crawl_run_id=crawl_run_id
+    )
     evaluation = existing or JobEvaluation(
         job_id=job.id, profile_id=profile.id, job_content_hash=content_hash
     )

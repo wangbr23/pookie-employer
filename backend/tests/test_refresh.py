@@ -313,6 +313,8 @@ class TestEvaluation:
         crawl = db_session.get(CrawlRun, result.crawl_run_id)
         assert crawl is not None
         assert crawl.evaluations_completed >= 0
+        assert crawl.ai_call_count == result.evaluation_counts.evaluated
+        assert crawl.estimated_ai_cost is None  # mock provider records no cost
 
 
 class TestUnsupportedSourceKind:

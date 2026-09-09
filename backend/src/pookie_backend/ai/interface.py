@@ -115,9 +115,17 @@ class AIService:
         self.session = session
 
     def evaluate_job(
-        self, profile: UserProfile, request: AIJobEvaluationRequest
+        self,
+        profile: UserProfile,
+        request: AIJobEvaluationRequest,
+        *,
+        crawl_run_id: UUID | None = None,
     ) -> AIJobEvaluationResult:
-        """Evaluate a job only when the requested provider/model is consented."""
+        """Evaluate a job only when the requested provider/model is consented.
+
+        *crawl_run_id* attributes the call log row to a refresh so its AI
+        usage can be rolled up onto the crawl run.
+        """
         self._check_consent(profile)
         call = AiCallLog(
             profile_id=profile.id,
@@ -125,6 +133,7 @@ class AIService:
             model_name=self.provider.model_name,
             operation="evaluate_job",
             status=AiCallStatus.ATTEMPTED,
+            crawl_run_id=crawl_run_id,
             created_at=datetime.now(UTC),
         )
         self.session.add(call)

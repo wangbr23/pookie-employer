@@ -1,6 +1,7 @@
 """Integration tests for crawl and raw-posting persistence."""
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from uuid import uuid4
 
 from sqlalchemy import func, select
@@ -12,9 +13,12 @@ from pookie_backend.ingestion import (
     create_source_run,
     finish_source_run,
     persist_raw_postings,
+    rollup_crawl_run_ai_usage,
     upsert_raw_posting,
 )
 from pookie_backend.models import (
+    AiCallLog,
+    AiCallStatus,
     ApprovalStatus,
     CrawlStatus,
     CrawlTrigger,
@@ -22,6 +26,7 @@ from pookie_backend.models import (
     RawJobPosting,
     SourceKind,
     SourceRunStatus,
+    UserProfile,
 )
 
 
@@ -110,3 +115,74 @@ def test_partial_source_failure_preserves_successful_postings(
     assert crawl_run.sources_failed == 1
     assert crawl_run.jobs_new == 1
     assert db_session.scalar(select(func.count()).select_from(RawJobPosting)) == 1
+
+
+def _ai_profile(session: Session) -> UserProfile:
+    profile = UserProfile(
+        id=uuid4(), owner_user_id=f"owner-{uuid4()}", ai_consent_given=True
+    )
+    session.add(profile)
+    session.flush()
+    return profile
+
+
+def _ai_call(
+    session: Session,
+    profile: UserProfile,
+    crawl_run_id,
+    *,
+    call_count: int = 1,
+    cost: Decimal | None = None,
+) -> None:
+    session.add(
+        AiCallLog(
+            id=uuid4(),
+            profile_id=profile.id,
+            provider="mock",
+            model_name="mock-v1",
+            operation="evaluate_job",
+            status=AiCallStatus.SUCCEEDED,
+            call_count=call_count,
+            estimated_cost=cost,
+            crawl_run_id=crawl_run_id,
+        )
+    )
+
+
+def test_ai_usage_rollup_sums_calls_and_cost(db_session: Session) -> None:
+    profile = _ai_profile(db_session)
+    crawl_run = create_crawl_run(db_session, CrawlTrigger.ON_DEMAND)
+    other_crawl = create_crawl_run(db_session, CrawlTrigger.MANUAL_SCRIPT)
+    _ai_call(db_session, profile, crawl_run.id, cost=Decimal("0.0100"))
+    _ai_call(
+        db_session,
+        profile,
+        crawl_run.id,
+        call_count=2,
+        cost=Decimal("0.0250"),
+    )
+    _ai_call(db_session, profile, other_crawl.id, cost=Decimal("9.99"))
+
+    crawl_run = rollup_crawl_run_ai_usage(db_session, crawl_run.id)
+
+    assert crawl_run.ai_call_count == 3
+    assert crawl_run.estimated_ai_cost == Decimal("0.0350")
+
+
+def test_ai_usage_rollup_is_idempotent_and_handles_no_calls(
+    db_session: Session,
+) -> None:
+    profile = _ai_profile(db_session)
+    crawl_run = create_crawl_run(db_session, CrawlTrigger.ON_DEMAND)
+    _ai_call(db_session, profile, crawl_run.id, cost=Decimal("0.0100"))
+
+    rollup_crawl_run_ai_usage(db_session, crawl_run.id)
+    crawl_run = rollup_crawl_run_ai_usage(db_session, crawl_run.id)
+
+    assert crawl_run.ai_call_count == 1
+    assert crawl_run.estimated_ai_cost == Decimal("0.0100")
+
+    other = create_crawl_run(db_session, CrawlTrigger.ON_DEMAND)
+    other = rollup_crawl_run_ai_usage(db_session, other.id)
+    assert other.ai_call_count == 0
+    assert other.estimated_ai_cost is None
