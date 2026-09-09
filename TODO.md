@@ -145,13 +145,40 @@ Remaining target companies after the Greenhouse/Lever/Ashby/Workday/Netflix adap
   - Implementation note (2026-09-09): the `/api/apply/v2/jobs` premise was wrong (that is Eightfold's API — see T46 findings in the design doc). The adapter instead parses each `?from=` search page's embedded `phApp.ddo` JSON. Ready for review; completion notes to be added when checked off.
 - [ ] `T48` Add Adobe as Phenom source — agent, complexity: simple, depends-on: T45, T46, design: docs/designs/2026-09-08-remaining-companies-adapters.md
   - Done when: Adobe is seeded idempotently via seed.py, fetches successfully through the Phenom adapter in a live refresh, and appears in the dashboard with apply links.
-- [ ] `T49` Verify careers-site backends for remaining companies — agent, complexity: simple, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+- [x] `T49` Verify careers-site backends for remaining companies — agent, complexity: simple, design: docs/designs/2026-09-08-remaining-companies-adapters.md
   - Done when: for each of Spotify, Microsoft, Tesla, Uber, Snap, X, Bloomberg, Atlassian, Oracle, Shopify the ATS backend and a working listing API are identified (or confirmed absent) using a real browser network tab or curl from a dev machine — plain fetches are bot-blocked for several — and findings are recorded in the research doc.
+  - Completed 2026-09-09: all ten probed from a dev machine (Playwright Chrome network tab + curl/httpx); full table in the doc's T49 findings section. Verdicts: 4 new JSON adapters (Microsoft PCSx, Spotify WP REST, Uber + Atlassian), Oracle ORC REST, Bloomberg Avature HTML-parse; Snap → existing Workday adapter (`snapchat/snap`) and X → existing Greenhouse board `xai`, seed only; Tesla confirmed bot-hostile (Akamai `cpr_chlge` challenge blocks all plain clients) — uncovered unless user reconsiders; Shopify has no JSON API (private Ashby board; jobs embedded in the `/careers` page stream — parseable, flagged for user decision).
 - [ ] `T51` Implement Apple source adapter — agent, complexity: complex, depends-on: T46, design: docs/designs/2026-09-08-remaining-companies-adapters.md
   - Done when: an adapter fetches Apple postings via the `jobs.apple.com` JSON API (or server-rendered search page as fallback) with pagination into `RawPosting`s, fixture-backed tests pass, and one live fetch is verified. Descriptions are available — prefer the API path.
 - [ ] `T52` Add Apple as a source — agent, complexity: simple, depends-on: T48, T51, design: docs/designs/2026-09-08-remaining-companies-adapters.md
   - Done when: Apple is seeded idempotently via seed.py, fetches successfully through its adapter in a live refresh, and appears in the dashboard with apply links.
   - Note: T50 (Amazon adapter) was removed from scope by user decision on 2026-09-08 before it started; its id is retired and never reused.
+
+### New adapters from T49 verification (2026-09-09)
+
+Findings in docs/designs/2026-09-08-remaining-companies-adapters.md (T49 section). Like
+T41–T46, every adapter task below adds a `SourceKind` enum value + migration + dispatch
+branch + frontend union value (same files), so they are serialized behind T48. Seed-only
+tasks (T60, T61) touch only seed.py and can run in parallel with the adapter chain.
+
+- [ ] `T53` Implement Microsoft PCSx source adapter — agent, complexity: complex, depends-on: T48, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter pages `GET apply.careers.microsoft.com/api/pcsx/search?domain=microsoft.com&start={offset}&pgSz=10`, parses `data.positions` into `RawPosting`s (apply URL `apply.careers.microsoft.com/careers/job/{id}`), handles `data.count`-driven pagination, fixture-backed tests pass, and one live fetch is verified. Optional second pass: per-job `position_details` for descriptions.
+- [ ] `T54` Implement Spotify source adapter — agent, complexity: medium, depends-on: T53, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter fetches `GET api.lifeatspotify.com/wp-json/animal/v1/job/search` (single response, all jobs), filters to `main_category.slug == "engineering"` into `RawPosting`s with apply URL `lifeatspotify.com/jobs/{slug}`, fixture-backed tests pass, and a live fetch is verified.
+- [ ] `T55` Implement Uber source adapter — agent, complexity: medium, depends-on: T54, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter pages `GET jobs.uber.com/api/jobs/search/?search=&page={n}` (empty search enumerates all) with httpx + browser UA — curl is Cloudflare-challenged, do not switch client — into `RawPosting`s (apply `jobs.uber.com/en/jobs/{id}/`, descriptions + salary text included), fixture-backed tests pass, and a live fetch is verified.
+- [ ] `T56` Implement Atlassian source adapter — agent, complexity: simple, depends-on: T55, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter fetches `GET www.atlassian.com/endpoint/careers/listings` (single response, all 243 jobs with `overview` HTML descriptions) into `RawPosting`s (apply URL from `portalJobPost.portalUrl` icims link), fixture-backed tests pass, and a live fetch is verified.
+- [ ] `T57` Implement Oracle ORC source adapter — agent, complexity: complex, depends-on: T56, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter pages `recruitingCEJobRequisitions` with `expand=requisitionList.secondaryLocations` (rows otherwise absent), builds apply URLs from requisition Ids, fixture-backed tests pass, and one live fetch is verified against the `CX_45001` site.
+- [ ] `T58` Implement Bloomberg Avature source adapter — agent, complexity: complex, depends-on: T57, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: an adapter pages `GET bloomberg.avature.net/careers/SearchJobs/?listFilterMode=1&jobOffset={n}` (server caps pages at 12 — ~32 pages for 374 jobs, poolable) parsing server-rendered `JobDetail` links into `RawPosting`s, fixture-backed tests pass, and one live fetch is verified.
+- [ ] `T59` Decide and (if approved) implement Shopify embedded-listing adapter — manual decision then agent, depends-on: T58, design: docs/designs/2026-09-08-remaining-companies-adapters.md
+  - Done when: user decides whether to accept the fragile embedded-stream parse (113 jobs from the `/careers` page + per-job description fetches); if approved, adapter implemented with fixture-backed tests and a live fetch verified. Tesla stays uncovered per T49 (Akamai bot-hostile) unless the user reconsiders.
+- [ ] `T60` Add Snap as a Workday source — agent, complexity: simple, depends-on: T39
+  - Done when: Snap is seeded idempotently via seed.py as a Workday source (`base_url` `wd1.myworkdaysite.com`, `external_board_id` `snapchat/snap`), fetches through the existing Workday adapter in a live refresh (~177 postings), and appears in the dashboard with apply links.
+- [ ] `T61` Add X (xAI) as a Greenhouse source — agent, complexity: simple, depends-on: T39
+  - Done when: X is seeded idempotently via seed.py as a Greenhouse source (board `xai`), fetches through the existing Greenhouse adapter in a live refresh (~252 postings), and appears in the dashboard with apply links.
 
 ## Discovered follow-ups
 
