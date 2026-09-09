@@ -142,6 +142,7 @@ Remaining target companies after the Greenhouse/Lever/Ashby/Workday/Netflix adap
 - [ ] `T46` Implement Phenom source adapter — agent, complexity: complex, design: docs/designs/2026-09-08-remaining-companies-adapters.md
   - Done when: an adapter clones the Netflix adapter pattern (paginate the `/api/apply/v2/jobs` API), adds `SourceKind.PHENOM` with migration and frontend union value, fixture-backed tests pass, and one live Phenom board (Adobe's tenant) is verified end to end.
   - Adobe confirmed Phenom 2026-09-08 (careers.adobe.com). The tenant/domain request parameter must be discovered during implementation. Spotify/Uber/Shopify are suspected Phenom — verify via T49 before seeding them.
+  - Implementation note (2026-09-09): the `/api/apply/v2/jobs` premise was wrong (that is Eightfold's API — see T46 findings in the design doc). The adapter instead parses each `?from=` search page's embedded `phApp.ddo` JSON. Ready for review; completion notes to be added when checked off.
 - [ ] `T48` Add Adobe as Phenom source — agent, complexity: simple, depends-on: T45, T46, design: docs/designs/2026-09-08-remaining-companies-adapters.md
   - Done when: Adobe is seeded idempotently via seed.py, fetches successfully through the Phenom adapter in a live refresh, and appears in the dashboard with apply links.
 - [ ] `T49` Verify careers-site backends for remaining companies — agent, complexity: simple, design: docs/designs/2026-09-08-remaining-companies-adapters.md

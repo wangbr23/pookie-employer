@@ -25,7 +25,7 @@ This research probed each company's careers site/API on 2026-09-08 and compared 
 |---|---|---|
 | Amazon | Own site, public JSON API `amazon.jobs/en/search.json` | 103KB live job JSON returned to a plain fetch |
 | Apple | Own site; server-rendered listings **with full descriptions**; known JSON API (`POST jobs.apple.com/api/role/search`) used by public scrapers | Search page rendered 600+ roles in plain HTML |
-| Adobe | **Phenom People** — same platform family as the Netflix adapter (T42) | `careers.adobe.com/api/apply/v2/jobs` responded ("Tenant not identified" = right endpoint, wrong tenant/domain param) |
+| Adobe | **Phenom People** — server-rendered search pages, parsed by the Phenom adapter (T46) | `careers.adobe.com/us/en/search-results?from=N` embeds 10 jobs/page in `phApp.ddo` JSON with descriptions (see T46 findings below) |
 
 ### Blocked from this session's probes — verify from a dev machine (browser or curl)
 
@@ -79,7 +79,7 @@ bot-block arms race. Out of MVP scope.
 Hybrid option A, in value order (tasks in TODO.md):
 
 1. **T45** Seed Databricks + MongoDB via the existing Greenhouse adapter (free, immediate).
-2. **T46** Implement a Phenom adapter (clone the Netflix adapter pattern) — **T48** seeds Adobe.
+2. **T46** Implement a Phenom adapter (done 2026-09-09 — see findings below) — **T48** seeds Adobe.
 3. **T51** Apple (`role/search`) adapter — verified reachable; **T52** seeds it. Serialized
    behind T46 because each adapter adds a `SourceKind` enum value + migration +
    `refresh.py` dispatch branch + frontend union (same files). Amazon was dropped from
@@ -93,5 +93,37 @@ Hybrid option A, in value order (tasks in TODO.md):
 ## Open items
 
 - Spotify backend unknown (Phenom suspected but unverified) — seed after T49.
-- Phenom tenant/domain param for Adobe must be discovered during T46 implementation.
 - Whether to revisit scraping/aggregator for Google, X, Bloomberg — user decision, deferred.
+
+## T46 implementation findings (2026-09-09)
+
+The original T46 premise — paginate Phenom's `/api/apply/v2/jobs` API — was wrong. That
+path is Eightfold's API, not Phenom's: `careers.adobe.com/api/apply/v2/jobs` answers
+`{"errorMsg":"Tenant not identified"}` for *every* `domain` value (`adobe.com`, `adobe`,
+`careers.adobe.com`, `ADOBUS`, …). The "right endpoint, wrong param" note in the probing
+table was a red herring; there is no per-tenant domain param on that endpoint at all.
+
+How Phenom boards actually work (verified live against `careers.adobe.com`):
+
+- Each `GET https://careers.adobe.com/us/en/search-results?from={offset}` page embeds its
+  10 results in the page's `phApp.ddo = {...}` bootstrap JSON at
+  `eagerLoadRefineSearch.data.jobs`, with `eagerLoadRefineSearch.totalHits` (650) for
+  pagination planning and clean overflow (`from=1000` → 0 jobs).
+- Entry fields: `jobSeqNo` (unique id), `reqId` (R-number), `title`, `applyUrl`,
+  `location`/`multi_location`/`cityStateCountry`, `descriptionTeaser` (short blurb —
+  present on all 650 postings), `experienceLevel`, `type`, `category`, `postedDate`.
+- No auth, no CSRF, no cookies needed for the page fetch. (The `POST /widgets` search API
+  needs a session + `x-csrf-token` and still answers `{"refineSearch":{"tokenAvailable":false}}`
+  from a plain client — it is not usable and not needed; the server-rendered pages suffice.)
+- Locale path prefix (`us/en`) varies per tenant, so `external_board_id` stores the
+  search-results path (e.g. `us/en/search-results`) and `base_url` the careers host.
+
+Live verification: 650 postings fetched in 7.4s (4-way page pool, same pattern as
+Netflix/Workday), all ids unique, 100% with title/location/description, spot-checked
+apply URLs return HTTP 200.
+
+Note for T48/dedupe: Adobe's Phenom `applyUrl`s point at Adobe's own Workday tenant
+(`adobe.wd5.myworkdayjobs.com/external_experienced`, 703 postings — reachable with the
+existing Workday adapter). Seeding Adobe via *both* platforms would surface
+near-duplicate cards and double AI calls, since T19 dedupe keeps uncertain duplicates
+separate — pick one source for Adobe (user chose Phenom, for the descriptions).

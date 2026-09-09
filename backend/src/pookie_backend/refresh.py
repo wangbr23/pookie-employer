@@ -24,6 +24,7 @@ from pookie_backend.adapters.greenhouse import (
 )
 from pookie_backend.adapters.lever import LeverResult, fetch_lever_postings
 from pookie_backend.adapters.netflix import NetflixResult, fetch_netflix_postings
+from pookie_backend.adapters.phenom import PhenomResult, fetch_phenom_postings
 from pookie_backend.adapters.workday import (
     WorkdayResult,
     fetch_workday_postings,
@@ -75,7 +76,7 @@ class SourceFetchResult:
 def _fetch_source(source: JobSource, timeout: float) -> SourceFetchResult:
     """Call the right adapter for *source* and return a uniform result."""
     kind = source.kind
-    r: GreenhouseResult | LeverResult | AshbyResult | WorkdayResult | NetflixResult
+    r: GreenhouseResult | LeverResult | AshbyResult | WorkdayResult | NetflixResult | PhenomResult
     if kind == SourceKind.GREENHOUSE:
         r = fetch_greenhouse_postings(source, timeout=timeout)
     elif kind == SourceKind.LEVER:
@@ -86,6 +87,8 @@ def _fetch_source(source: JobSource, timeout: float) -> SourceFetchResult:
         r = fetch_workday_postings(source, timeout=timeout)
     elif kind == SourceKind.NETFLIX:
         r = fetch_netflix_postings(source, timeout=timeout)
+    elif kind == SourceKind.PHENOM:
+        r = fetch_phenom_postings(source, timeout=timeout)
     else:
         return SourceFetchResult(
             source_id=source.id,

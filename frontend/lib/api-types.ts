@@ -36,6 +36,7 @@ export type SourceKind =
   | "ashby"
   | "workday"
   | "netflix"
+  | "phenom"
   | "company_page";
 
 export type SourceStatus = "active" | "paused" | "needs_review";

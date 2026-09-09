@@ -32,6 +32,7 @@ class SourceKind(StrEnum):
     ASHBY = "ashby"
     WORKDAY = "workday"
     NETFLIX = "netflix"
+    PHENOM = "phenom"
     COMPANY_PAGE = "company_page"
 
 
